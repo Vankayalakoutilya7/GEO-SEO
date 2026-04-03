@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Settings — GEO-SEO CRM{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-in">
+  <div class="col-md-6">
+    <div class="kpi-card mt-5">
+      <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-gear-fill text-primary fs-3 me-3"></i>
+        <h2 class="h4 mb-0 fw-bold">API Configuration</h2>
+      </div>
+      
+      <p class="text-muted mb-4">
+        Configure your Anthropic Claude API key to enable AI-driven GEO analysis and content recommendations.
+      </p>
+      
+      <form method="POST">
+        <div class="mb-4">
+          <label for="claude_api_key" class="form-label text-muted small fw-bold text-uppercase">Claude API Key</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary border-opacity-25 text-muted">
+              <i class="bi bi-key"></i>
+            </span>
+            <input type="password" class="form-control" id="claude_api_key" name="claude_api_key" 
+                   placeholder="{{ key_placeholder }}" required
+                   style="background:rgba(255,255,255,0.05); color:#fff; border-color:rgba(255,255,255,0.1)">
+          </div>
+          <div class="form-text text-muted small mt-2">
+            Your key is stored in your session and never shared.
+          </div>
+        </div>
+        
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-lg">
+            Save Configuration
+          </button>
+        </div>
+      </form>
+      
+      <div class="mt-4 pt-4 border-top border-secondary border-opacity-10">
+        <a href="/" class="text-muted text-decoration-none small hover-white">
+          <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
