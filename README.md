@@ -1,259 +1,67 @@
-<p align="center">
-  <img src="assets/banner.svg" alt="GEO-SEO Claude Code Skill" width="900"/>
-</p>
 
-<p align="center">
-  <strong>GEO-first, SEO-supported.</strong> Optimize websites for AI-powered search engines<br/>
-  (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews) while maintaining traditional SEO foundations.
-</p>
+# GEO-SEO AI Analysis Pipeline (GEO Audit Agent)
 
-<p align="center">
-  AI search is eating traditional search. This tool optimizes for where traffic is going, not where it was.
-</p>
+## Introduction: The Emergence of GEO from SEO
+**Generative Engine Optimization (GEO)** represents the evolutionary next step from traditional Search Engine Optimization (SEO). While SEO historically focused on optimizing websites for standard search engine crawlers and keyword rankings, GEO focuses on preparing and optimizing a website's compatibility for modern AI-driven search engines. The GEO Audit Agent specifically evaluates a domain's readiness for platforms like ChatGPT, Perplexity, and Google AI Overviews. 
+
+## Executive Overview
+The GEO Audit Agent is a high-performance, autonomous system that utilizes a **master-worker architecture**. It orchestrates five specialized subagents in parallel to calculate a comprehensive readiness score across multiple technical and qualitative vectors.
 
 ---
 
-## Why GEO Matters (2026)
+## Pipeline Architecture & Data Flow
 
-| Metric | Value |
-|--------|-------|
-| GEO services market | $850M+ (projected $7.3B by 2031) |
-| AI-referred traffic growth | +527% year-over-year |
-| AI traffic conversion rate vs organic | 4.4x higher |
-| Gartner: search traffic drop by 2028 | -50% |
-| Brand mentions vs backlinks for AI | 3x stronger correlation |
-| Marketers investing in GEO | Only 23% |
+### Phase 1: Discovery & Reconnaissance (Extraction)
+*   The system begins by fetching the target homepage and extracting semantic HTML, metatags, navigation schema, and schema.org data to heuristically classify the business type (e.g., E-commerce, SaaS, Local Business).
+*   It retrieves technical AI and crawler directives from the `robots.txt` and `llms.txt` files. 
+*   The agent then attempts to parse the `sitemap.xml` to prioritize up to 50 URLs, or falls back to an internal link crawl up to 2-3 levels deep.
+*   This creates a massive **Discovery Queue of up to 10,000 URLs**. 
+*   Critical metadata (such as HTTP status, word count, and schemas) is collected synchronously, strictly respecting timeouts (30 seconds) and crawler rules.
 
----
+### Phase 2: Intelligent Prioritization
+*   Instead of blindly crawling the site, the agent applies an **advanced heuristic engine** to score and rank URLs based on semantic markers.
+*   High-value pages containing terms like "pricing," "product," and "faq" receive heavy boosts, while low-value pages like privacy policies are downranked.
+*   This distilled filtering yields an elite **Target List of the top 1,000 pages** that are most impactful for AI platforms.
 
-## Quick Start
+### Phase 3: Mass Extraction & Normalization
+*   A rapid **15-worker concurrency pool** simultaneously fetches the 1,000 targeted URLs.
+*   The system normalizes this massive dataset into a tight bundle by extracting only the H1 headers, Meta descriptions, and the first 400 to 600 characters of page content.
+*   Enterprise analytics are then run to quantify total Answer Blocks, schema markup deployments, and AI-citable FAQs.
 
-### One-Command Install (macOS/Linux)
+### Phase 4: Token Compression & Parallel Subagent Delegation
+*   To manage API limits and contextual windows, the system employs a **Token Compression strategy**. The top 100 pillar pages are passed with their full textual context, while the remaining 900 are passed as a lightweight structural map (URLs and primary H1 headers).
+*   This payload is dispatched in parallel to **5 specialized subagents**:
+    1.  **AI Visibility:** Evaluates citability scoring, AI crawler readiness, and brand mentions.
+    2.  **Platform Optimization:** Tailors specific checks for AI engines like Perplexity and ChatGPT.
+    3.  **Technical GEO:** Audits Core Web Vitals, Server-Side Rendering (SSR) capabilities, and security protocols.
+    4.  **Content E-E-A-T:** Analyzes authoritativeness, depth, and citation validation.
+    5.  **Schema:** Extracts and validates JSON-LD/schema.org implementations.
+*   These agents perform their analysis asynchronously, backed by a 4-cycle failover mechanism across Haiku and Sonnet models.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/zubair-trabzada/geo-seo-claude/main/install.sh | bash
-```
-
-### Manual Install
-
-```bash
-git clone https://github.com/zubair-trabzada/geo-seo-claude.git
-cd geo-seo-claude
-./install.sh
-```
-
-### Windows (Git Bash)
-
-Requires [Git for Windows](https://git-scm.com/downloads) which includes Git Bash.
-
-```bash
-# Option 1: One-command install (run from Git Bash, not PowerShell/CMD)
-curl -fsSL https://raw.githubusercontent.com/zubair-trabzada/geo-seo-claude/main/install-win.sh | bash
-
-# Option 2: Manual install
-git clone https://github.com/zubair-trabzada/geo-seo-claude.git
-cd geo-seo-claude
-./install-win.sh
-```
-
-> **Note:** Right-click the folder and select "Open Git Bash here", or open Git Bash and navigate to the directory. Do not use PowerShell or Command Prompt.
-
-### Requirements
-
-- Python 3.8+
-- Claude Code CLI
-- Git
-- Optional: Playwright (for screenshots)
+### Phase 5: Synthesis, Reporting & Supabase Integration
+*   The deep analyses are regex-parsed into strict JSON objects.
+*   The orchestrator retrieves the 0-100 scores from all subagents and calculates a weighted composite score (e.g., Citability 25%, Brand 20%, EEAT 20%, Technical 15%, Schema 10%, Platform 10%).
+*   The system categorizes the severity of findings (Critical, High, Medium, Low) based on the business type.
+*   Data is integrated directly into a normalized Supabase schema, storing `projects`, `audits`, and `agent_logs`.
+*   Finally, the pipeline compiles a Markdown report (`GEO-AUDIT-REPORT.md`) with a 30-day action plan and generates a heavily-formatted PDF artifact that is securely stored in S3.
 
 ---
 
-## Commands
+## Future Scalability & Architectural Alternatives
 
-Open Claude Code and use these commands:
+To accommodate enterprise-level complexity, the architecture supports several advanced alternative methods:
 
-| Command | What It Does |
-|---------|-------------|
-| `/geo audit <url>` | Full GEO + SEO audit with parallel subagents |
-| `/geo quick <url>` | 60-second GEO visibility snapshot |
-| `/geo citability <url>` | Score content for AI citation readiness |
-| `/geo crawlers <url>` | Check AI crawler access (robots.txt) |
-| `/geo llmstxt <url>` | Analyze or generate llms.txt |
-| `/geo brands <url>` | Scan brand mentions across AI-cited platforms |
-| `/geo platforms <url>` | Platform-specific optimization |
-| `/geo schema <url>` | Structured data analysis & generation |
-| `/geo technical <url>` | Technical SEO audit |
-| `/geo content <url>` | Content quality & E-E-A-T assessment |
-| `/geo report <url>` | Generate client-ready GEO report |
-| `/geo report-pdf` | Generate professional PDF report with charts & visualizations |
+**Discovery & Crawling Upgrades:**
+*   **Dynamic Content Rendering:** Integrating headless browsers (Puppeteer, Playwright) or high-performance JS rendering engines to capture Client-Side Rendering (CSR) content.
+*   **Intelligent Distributed Crawling:** Offloading tasks to external services like Apify, BrightData, or ZenRows to bypass geographical blockers and CAPTCHAs.
+*   **Semantic URL Clustering:** Using lightweight embedding models to cluster URLs and extract a "represented sample" of page varieties, skipping duplicative templates to save tokens.
 
----
+**Agent Execution Upgrades:**
+*   **Event-Driven Task Queues:** Moving from local threads to asynchronous distributed queues (e.g., Kafka, Celery, RabbitMQ) running on independent stateless workers for massive scalability.
+*   **Stream-Based Findings:** Utilizing Server-Sent Events (SSE) or WebSockets to stream findings to a live dashboard in real-time.
+*   **Agent Collaboration Protocol:** Using frameworks like LangGraph or AutoGen to allow subagents to communicate mid-run (e.g., the Technical Agent passing rendering bottlenecks to the Content Agent).
 
-## Architecture
-
-```
-geo-seo-claude/
-├── geo/                          # Main skill orchestrator
-│   └── SKILL.md                  # Primary skill file with commands & routing
-├── skills/                       # 13 specialized sub-skills
-│   ├── geo-audit/                # Full audit orchestration & scoring
-│   ├── geo-citability/           # AI citation readiness scoring
-│   ├── geo-crawlers/             # AI crawler access analysis
-│   ├── geo-llmstxt/              # llms.txt standard analysis & generation
-│   ├── geo-brand-mentions/       # Brand presence on AI-cited platforms
-│   ├── geo-platform-optimizer/   # Platform-specific AI search optimization
-│   ├── geo-schema/               # Structured data for AI discoverability
-│   ├── geo-technical/            # Technical SEO foundations
-│   ├── geo-content/              # Content quality & E-E-A-T
-│   ├── geo-report/               # Client-ready markdown report generation
-│   ├── geo-report-pdf/           # Professional PDF report with charts
-│   ├── geo-prospect/             # CRM-lite prospect pipeline management
-│   ├── geo-proposal/             # Auto-generate client proposals
-│   └── geo-compare/              # Monthly delta tracking & progress reports
-├── agents/                       # 5 parallel subagents
-│   ├── geo-ai-visibility.md      # GEO audit, citability, crawlers, brands
-│   ├── geo-platform-analysis.md  # Platform-specific optimization
-│   ├── geo-technical.md          # Technical SEO analysis
-│   ├── geo-content.md            # Content & E-E-A-T analysis
-│   └── geo-schema.md             # Schema markup analysis
-├── scripts/                      # Python utilities
-│   ├── fetch_page.py             # Page fetching & parsing
-│   ├── citability_scorer.py      # AI citability scoring engine
-│   ├── brand_scanner.py          # Brand mention detection
-│   ├── llmstxt_generator.py      # llms.txt validation & generation
-│   └── generate_pdf_report.py    # PDF report generator (ReportLab)
-├── schema/                       # JSON-LD templates
-│   ├── organization.json         # Organization schema (with sameAs)
-│   ├── local-business.json       # LocalBusiness schema
-│   ├── article-author.json       # Article + Person schema (E-E-A-T)
-│   ├── software-saas.json        # SoftwareApplication schema
-│   ├── product-ecommerce.json    # Product schema with offers
-│   └── website-searchaction.json # WebSite + SearchAction schema
-├── install.sh                    # One-command installer
-├── uninstall.sh                  # Uninstaller
-├── requirements.txt              # Python dependencies
-└── README.md                     # This file
-```
-
----
-
-## Data Storage
-
-The CRM and reporting skills (`/geo prospect`, `/geo proposal`, `/geo compare`) store runtime data outside the Claude Code directory:
-
-```
-~/.geo-prospects/
-├── prospects.json              # Client/prospect pipeline data
-├── proposals/                  # Generated proposal documents
-│   └── <domain>-proposal-<date>.md
-└── reports/                    # Monthly delta reports
-    └── <domain>-monthly-<YYYY-MM>.md
-```
-
-This directory is **not removed** by the uninstaller — delete it manually if you no longer need your prospect data.
-
----
-
-## How It Works
-
-### Full Audit Flow
-
-When you run `/geo audit https://example.com`:
-
-1. **Discovery** — Fetches homepage, detects business type, crawls sitemap
-2. **Parallel Analysis** — Launches 5 subagents simultaneously:
-   - AI Visibility (citability, crawlers, llms.txt, brand mentions)
-   - Platform Analysis (ChatGPT, Perplexity, Google AIO readiness)
-   - Technical SEO (Core Web Vitals, SSR, security, mobile)
-   - Content Quality (E-E-A-T, readability, freshness)
-   - Schema Markup (detection, validation, generation)
-3. **Synthesis** — Aggregates scores, generates composite GEO Score (0-100)
-4. **Report** — Outputs prioritized action plan with quick wins
-
-### Scoring Methodology
-
-| Category | Weight |
-|----------|--------|
-| AI Citability & Visibility | 25% |
-| Brand Authority Signals | 20% |
-| Content Quality & E-E-A-T | 20% |
-| Technical Foundations | 15% |
-| Structured Data | 10% |
-| Platform Optimization | 10% |
-
----
-
-## Key Features
-
-### Citability Scoring
-Analyzes content blocks for AI citation readiness. Optimal AI-cited passages are 134-167 words, self-contained, fact-rich, and directly answer questions.
-
-### AI Crawler Analysis
-Checks robots.txt for 14+ AI crawlers (GPTBot, ClaudeBot, PerplexityBot, etc.) and provides specific allow/block recommendations.
-
-### Brand Mention Scanning
-Brand mentions correlate 3x more strongly with AI visibility than backlinks. Scans YouTube, Reddit, Wikipedia, LinkedIn, and 7+ other platforms.
-
-### Platform-Specific Optimization
-Only 11% of domains are cited by both ChatGPT and Google AI Overviews for the same query. Provides tailored recommendations per platform.
-
-### llms.txt Generation
-Generates the emerging llms.txt standard file that helps AI crawlers understand your site structure.
-
-### Client-Ready Reports
-Generates professional GEO reports in markdown or PDF format. PDF reports include score gauges, bar charts, platform readiness visualizations, color-coded tables, and prioritized action plans — ready to deliver to clients.
-
----
-
-## Use Cases
-
-- **GEO Agencies** — Run client audits and generate deliverables
-- **Marketing Teams** — Monitor and improve AI search visibility
-- **Content Creators** — Optimize content for AI citations
-- **Local Businesses** — Get found by AI assistants
-- **SaaS Companies** — Improve entity recognition across AI platforms
-- **E-commerce** — Optimize product pages for AI shopping recommendations
-
----
-
-## Uninstall
-
-```bash
-./uninstall.sh
-```
-
-Or manually:
-```bash
-rm -rf ~/.claude/skills/geo ~/.claude/skills/geo-* ~/.claude/agents/geo-*.md
-```
-
----
-
-## Want to Turn This Into a Business?
-
-The tool is free. Learning how to monetize it is where the community comes in.
-
-**[Join the AI Workshop Community →](https://skool.com/aiworkshop)**
-
-Inside you'll get:
-- **Video walkthroughs** — Step-by-step setup, running audits, reading results
-- **Client acquisition playbook** — How to find prospects, pitch GEO services, and close deals
-- **Live office hours** — Bring your audit results, get direct help
-- **GEO agency pricing & templates** — Proposal docs, cold outreach scripts, onboarding workflows
-
-GEO agencies charge $2K–$12K/month. This tool does the audit. The community teaches you how to sell it.
-
----
-
-## License
-
-MIT License
-
----
-
-## Contributing
-
-Contributions welcome!
-
----
-
-Built for the AI search era.
+**Aggregation & Output Upgrades:**
+*   **Persistent Database Backing:** Piping results directly into SQL (PostgreSQL) or Document Stores (MongoDB) to track historical trendlines.
+*   **Dynamic Weighting per Vertical:** Training predictive models to dynamically adjust category weights based on the target audience, replacing hard-coded formulas.
+*   **API-First Headless Output:** Outputting results as a JSON API response to allow engineering teams to pipe GEO scores seamlessly into their CI/CD pipelines.
