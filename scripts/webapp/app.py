@@ -548,6 +548,16 @@ def analyze_url():
                 discovery_queue.extend([l for l in sitemap_links if l not in visited])
             except ImportError: pass
 
+        # BFS Fallback Check if Sitemap failed or didn't exist
+        if not discovery_queue:
+            print("[DEBUG] No Sitemap found or sitemap empty. Falling back to Recursive BFS Crawler...")
+            try:
+                from fetch_page import recursive_bfs_crawl
+                bfs_links = recursive_bfs_crawl(url, max_pages=3000)
+                discovery_queue.extend([l for l in bfs_links if l not in visited])
+            except ImportError as e:
+                print(f"[DEBUG] Failed to import recursion crawler: {e}")
+
         # B. Homepage extraction
         res = fetch_page(url)
         if res and not res.get("errors"):

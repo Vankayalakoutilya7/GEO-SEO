@@ -452,6 +452,64 @@ def crawl_sitemap(url: str, max_pages: int = 200, timeout: int = 20) -> list:
     return list(discovered_pages)[:max_pages]
 
 
+def fast_extract_links(url: str, base_domain: str, timeout: int = 10) -> list:
+    """Lightweight link extractor for rapid BFS crawling."""
+    links = []
+    try:
+        resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "lxml")
+            for link in soup.find_all("a", href=True):
+                href = urljoin(url, link["href"])
+                href = href.split("#")[0].rstrip("/")
+                parsed_href = urlparse(href)
+                # Check if it's an internal link
+                if base_domain in parsed_href.netloc.replace("www.", ""):
+                    links.append(href)
+    except Exception:
+        pass
+    return list(set(links))
+
+
+def recursive_bfs_crawl(start_url: str, max_pages: int = 3000, timeout: int = 10) -> list:
+    """Fallback recursive BFS crawler to discover internal links if sitemap is missing."""
+    import concurrent.futures
+    parsed_root = urlparse(start_url)
+    base_domain = parsed_root.netloc.replace("www.", "")
+
+    start_clean = start_url.split('#')[0].rstrip('/')
+    visited = set([start_clean])
+    queue = [start_clean]
+    discovered = [start_clean]
+    
+    print(f"[DEBUG] [BFS Crawler] Starting fast recursive crawl for {base_domain} (Max: {max_pages})")
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        while queue and len(discovered) < max_pages:
+            # Process in batches to balance concurrency and BFS order
+            batch = queue[:20]
+            queue = queue[20:]
+            
+            future_to_url = {executor.submit(fast_extract_links, u, base_domain, timeout): u for u in batch}
+            for future in concurrent.futures.as_completed(future_to_url):
+                try:
+                    new_links = future.result()
+                    for link in new_links:
+                        if link not in visited:
+                            visited.add(link)
+                            discovered.append(link)
+                            queue.append(link)
+                            if len(discovered) >= max_pages:
+                                break
+                except Exception:
+                    pass
+                if len(discovered) >= max_pages:
+                    break
+
+    print(f"[DEBUG] [BFS Crawler] Finished. Discovered {len(discovered)} unique URLs.")
+    return discovered[:max_pages]
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python fetch_page.py <url> [mode]")
