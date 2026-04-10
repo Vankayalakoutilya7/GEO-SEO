@@ -219,7 +219,6 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
     except Exception as e:
         result["errors"].append(f"Unexpected error: {str(e)}")
 
-<<<<<<< HEAD
     # Playwright Fallback if requested or if SSR seems missing
     if (use_playwright or not result.get("has_ssr_content")) and PLAYWRIGHT_AVAILABLE:
         try:
@@ -281,9 +280,6 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                 browser.close()
         except Exception as e:
             result["errors"].append(f"Playwright error: {str(e)}")
-
-=======
->>>>>>> origin/main
     return result
 
 
