@@ -22,7 +22,12 @@ try:
     import requests
     from bs4 import BeautifulSoup
 except ImportError:
+<<<<<<< HEAD
     print("WARNING: Required packages (requests, bs4) not installed. Brand scanning will be disabled.")
+=======
+    print("ERROR: Required packages not installed. Run: pip install -r requirements.txt")
+    sys.exit(1)
+>>>>>>> origin/main
 
 DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",

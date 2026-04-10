@@ -36,8 +36,7 @@ The GEO Audit Agent is a high-performance, autonomous system that utilizes a **m
     3.  **Technical GEO:** Audits Core Web Vitals, Server-Side Rendering (SSR) capabilities, and security protocols.
     4.  **Content E-E-A-T:** Analyzes authoritativeness, depth, and citation validation.
     5.  **Schema:** Extracts and validates JSON-LD/schema.org implementations.
-*   These agents perform their analysis asynchronously, backed by a 4-cycle failover mechanism across Haiku series models.
-<!-- *   These agents perform their analysis asynchronously, backed by a 4-cycle failover mechanism across Haiku series and sonnet series models. -->
+*   These agents perform their analysis asynchronously, backed by a 4-cycle failover mechanism across Haiku and Sonnet models.
 ### Phase 5: Synthesis, Reporting & Supabase Integration
 *   The deep analyses are regex-parsed into strict JSON objects.
 *   The orchestrator retrieves the 0-100 scores from all subagents and calculates a weighted composite score (e.g., Citability 25%, Brand 20%, EEAT 20%, Technical 15%, Schema 10%, Platform 10%).

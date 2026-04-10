@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  geo-crm:
+    build: .
+    container_name: geo_seo_crm
+    ports:
+      - "5050:5050"
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      # ANTHROPIC_API_KEY can be passed via environment if desired:
+      # - ANTHROPIC_API_KEY=your_key_here
+    volumes:
+      - .:/app
+      # This ensures local JSON storage persists between container runs
+      - geo-crm-data:/root/.geo-prospects
+
+volumes:
+  geo-crm-data:

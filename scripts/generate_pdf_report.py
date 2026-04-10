@@ -699,7 +699,6 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
                 # Add Evidence URL if present
                 if finding.get("evidence_url"):
                     elements.append(Paragraph(f"<b>Evidence:</b> {finding['evidence_url']}", styles['SmallText']))
-                
             elements.append(Spacer(1, 8))
     else:
         elements.append(Paragraph(

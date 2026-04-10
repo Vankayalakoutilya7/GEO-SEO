@@ -219,6 +219,7 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
     except Exception as e:
         result["errors"].append(f"Unexpected error: {str(e)}")
 
+<<<<<<< HEAD
     # Playwright Fallback if requested or if SSR seems missing
     if (use_playwright or not result.get("has_ssr_content")) and PLAYWRIGHT_AVAILABLE:
         try:
@@ -281,6 +282,8 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
         except Exception as e:
             result["errors"].append(f"Playwright error: {str(e)}")
 
+=======
+>>>>>>> origin/main
     return result
 
 
@@ -640,7 +643,6 @@ def recursive_bfs_crawl(start_url: str, max_pages: int = 3000, timeout: int = 10
                         for cookie in cookies:
                             session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
                         print(f"[DEBUG] [BFS Crawler] Session primed with {len(cookies)} cookies.")
-                    
                     for link in new_links:
                         if link not in visited:
                             visited.add(link)
@@ -681,6 +683,9 @@ if __name__ == "__main__":
             "sample_urls": urls[:10],
             "status": "COMPLETED" if len(urls) > 1 else "FAILED_OR_LIMITED"
         }
+    elif mode == "sitemap":
+        pages = crawl_sitemap(target_url)
+        data = {"pages": pages, "count": len(pages)}
     elif mode == "blocks":
         response = requests.get(target_url, headers=DEFAULT_HEADERS, timeout=30)
         data = extract_content_blocks(response.text)

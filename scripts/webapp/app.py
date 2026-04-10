@@ -14,16 +14,20 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+<<<<<<< HEAD
 from dotenv import load_dotenv
 
 # Load environment variables from .env file if it exists
 load_dotenv()
+=======
+>>>>>>> origin/main
 
 # Add parent directory to sys.path to import fetch_page
 sys.path.append(str(Path(__file__).parent.parent))
 try:
     from fetch_page import fetch_page, fetch_robots_txt, fetch_llms_txt
     from citability_scorer import analyze_page_citability
+<<<<<<< HEAD
     from brand_scanner import generate_brand_report
 except ImportError as e:
     print("\n" + "!"*60)
@@ -31,11 +35,17 @@ except ImportError as e:
     print(f"Details: {e}")
     print("Please run: ./venv/bin/python3 scripts/webapp/app.py")
     print("!"*60 + "\n")
+=======
+except ImportError:
+>>>>>>> origin/main
     fetch_page = None
     fetch_robots_txt = None
     fetch_llms_txt = None
     analyze_page_citability = None
+<<<<<<< HEAD
     generate_brand_report = None
+=======
+>>>>>>> origin/main
 
 from flask import Flask, render_template, request, redirect, url_for, send_file, abort, jsonify, session
 import anthropic
@@ -46,7 +56,11 @@ except ImportError:
     create_client = None
 
 app = Flask(__name__)
+<<<<<<< HEAD
 app.secret_key = "GEO_STABLE_SESSION_KEY_2026_MASTER"
+=======
+app.secret_key = os.urandom(24)
+>>>>>>> origin/main
 
 # ── Agent Configurations ───────────────────────────────────────────────
 AGENT_DIR = Path(__file__).parent.parent.parent / "agents"
@@ -55,9 +69,13 @@ AGENT_MAPPING = {
     "geo-content": {"weight": 0.20, "label": "Content E-E-A-T"},
     "geo-technical": {"weight": 0.15, "label": "Technical GEO Infrastructure"},
     "geo-schema": {"weight": 0.15, "label": "Schema & Structured Data"},
+<<<<<<< HEAD
     "geo-platform-analysis": {"weight": 0.25, "label": "Platform Optimization"},
     "geo-echo": {"label": "Unique Value (Echo Penalty)", "weight": 0.0},
     "geo-executive-roadmap": {"label": "Executive Strategic Roadmap", "weight": 0.0}
+=======
+    "geo-platform-analysis": {"weight": 0.25, "label": "Platform Optimization"}
+>>>>>>> origin/main
 }
 
 def load_agent_prompt(name: str) -> str:
@@ -105,7 +123,6 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
     data_context = prepare_agent_payload(agent_id, url, content_bundle)
 
     # ── Claude 4 Safety Net (Current for April 2026) ──────────────
-    # models_to_try = ["claude-sonnet-4-6", "claude-haiku-4-5"]
     models_to_try = ["claude-haiku-4-5"]
     
     # Define Structured Output Tool
@@ -207,6 +224,7 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
     return {
         "id": agent_id, "label": AGENT_MAPPING.get(agent_id, {}).get("label", agent_id),
         "score": 0, "summary": f"Audit Failed on all Claude models.", "weight": 0.2, "error": True,
+<<<<<<< HEAD
         "pdf_description": "Audit Failed: API exhausted.", "tokens_used": 0, "status": "FAILED"
     }
 
@@ -346,6 +364,12 @@ def calculate_echo_penalty(pages: list) -> float:
             
     return round(sum(similarities) / len(similarities), 1) if similarities else 0.0
 
+=======
+        "pdf_description": f"Audit Failed\n\nSTRATEGIC STRENGTHS:\n• N/A\n\nCRITICAL WEAKNESSES:\n• All LLM models (Sonnet/Haiku) exhausted\n\nIMPROVEMENT ROADMAP:\n• Verify Anthropic API Key Status",
+        "tokens_used": 0, "status": "FAILED"
+    }
+
+>>>>>>> origin/main
 # ==============================================================================
 # [EXECUTION STEP 5: INDUSTRIAL JSON SCORE PARSING]
 # Invoked internally by Step 4. Extracts the 10/10 JSON arrays from Claude's literal text.
@@ -411,8 +435,12 @@ def parse_agent_response(full_text: str, agent_id: str, weight: float) -> dict:
 def inject_now():
     return {
         "now": datetime.now().strftime("%Y-%m-%d %H:%M"),
+<<<<<<< HEAD
         "claude_api_key_set": "claude_api_key" in session or (CLAUDE_API_KEY != "your-api-key-here" and CLAUDE_API_KEY != ""),
         "missing_deps": fetch_page is None
+=======
+        "claude_api_key_set": "claude_api_key" in session or (CLAUDE_API_KEY != "your-api-key-here" and CLAUDE_API_KEY != "")
+>>>>>>> origin/main
     }
 
 CRM_PATH = Path.home() / ".geo-prospects" / "prospects.json"
@@ -585,12 +613,19 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
             "date": data["date"],
             "executive_summary": data.get("meta_insight", ""),
             "scores": mapped_scores,
+<<<<<<< HEAD
             "metrics": data.get("metrics", {}),
             "findings": [],
             "suggested_code": [],
             "platforms": {
                 "ChatGPT Web Search": results_map.get("geo-ai-visibility", 0),
                 "claude-haiku-4-5": results_map.get("geo-ai-visibility", 0),
+=======
+            "findings": [{"title": r["label"], "severity": "HIGH" if r["score"] < 50 else "INFO", "description": clean_md(r["pdf_description"])} for r in data["results"]],
+            "platforms": {
+                "ChatGPT Web Search": results_map.get("geo-ai-visibility", 0),
+                "Claude 3.5 Sonnet": results_map.get("geo-ai-visibility", 0),
+>>>>>>> origin/main
                 "Google AIO": results_map.get("geo-technical", 0),
                 "Perplexity": results_map.get("geo-content", 0),
                 "Bing Copilot": results_map.get("geo-schema", 0)
@@ -599,6 +634,7 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
             "quick_wins": ["Implement llms.txt standard" if data["metrics"].get("faq_count", 0) < 3 else "Optimize Answer Blocks"],
         }
         
+<<<<<<< HEAD
         # Aggregate structured findings and code from all agents
         for r in data.get("results", []):
             if r.get("findings"):
@@ -613,6 +649,8 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
             if r.get("suggested_code"):
                 report_data_pdf["suggested_code"].extend(r["suggested_code"])
         
+=======
+>>>>>>> origin/main
         generate_report(report_data_pdf, pdf_path)
         
         public_url = None
@@ -643,9 +681,12 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
 @app.route("/analyze_url", methods=["POST"])
 def analyze_url():
     """Deep Site-wide Recursive Audit (30+ Pages)."""
+<<<<<<< HEAD
     if fetch_page is None:
         return "ERROR: Dependencies not found. Please ensure you are running in the virtual environment (venv)."
     
+=======
+>>>>>>> origin/main
     url = request.form.get("url", "").strip()
     if not url: return "Please enter a valid URL."
     if not url.startswith("http"): url = "https://" + url
@@ -657,13 +698,21 @@ def analyze_url():
     audit_id = str(uuid.uuid4())  # Pre-generated UUID for the historical run
 
     from urllib.parse import urlparse, urljoin
+<<<<<<< HEAD
     domain = urlparse(url).netloc.replace("www.", "")
     if not domain: domain = url
+=======
+>>>>>>> origin/main
 
     # ── 0. Project Hierarchy ──────────────────────────────────────────
     print(f"[DEBUG] [STEP 0] Establishing Supreme Relational UUIDs (Audit ID: {audit_id})")
     if sb:
         try:
+<<<<<<< HEAD
+=======
+            domain = urlparse(url).netloc.replace("www.", "")
+            if not domain: domain = url
+>>>>>>> origin/main
             # Check if domain exists as a project
             existing = sb.table("projects").select("id").eq("target_url", domain).execute()
             if existing.data and len(existing.data) > 0:
@@ -692,6 +741,7 @@ def analyze_url():
     metrics = {"faq_count": 0, "answer_blocks": 0, "snippet_coverage": 0, "schema_count": 0, "schema_types": set(), 
                "crawlers": {}, "total_discovered": 0, "deep_audited": 0, "broken_links": 0}
     
+<<<<<<< HEAD
     MAX_DISCOVERY = 5000 
     MAX_AUDIT = 50     
     
@@ -707,6 +757,21 @@ def analyze_url():
         if any(x in u for x in ["case-study", "customer", "review", "testimonial"]): score += 50
         # Aggressive low-priority filtering
         if any(x in u for x in ["terms", "privacy", "legal", "cookie", "login", "signin", "signup", "cart", "checkout", "account"]): score -= 150
+=======
+    MAX_DISCOVERY = 10000 
+    MAX_AUDIT = 1000     
+    
+    def rank_url(u: str) -> int:
+        """Brilliant heuristic to prioritize high-value pillars (10/10 Accuracy)."""
+        u = u.lower()
+        score = 10 
+        if any(x in u for x in ["pricing", "plan"]): score += 100
+        if any(x in u for x in ["product", "feature", "solution"]): score += 80
+        if any(x in u for x in ["blog", "guide", "article"]): score += 60
+        if any(x in u for x in ["faq", "docs", "help"]): score += 70
+        if any(x in u for x in ["case-study", "customer"]): score += 50
+        if any(x in u for x in ["terms", "privacy", "legal", "cookie"]): score -= 100 # Low priority
+>>>>>>> origin/main
         return score
 
     parsed_root = urlparse(url)
@@ -714,6 +779,7 @@ def analyze_url():
     
     print(f"[DEBUG] [STEP 1] Crawling Sitemap & Deep Extraction...")
     if fetch_page:
+<<<<<<< HEAD
         # ── Universal Session Priming (Stealth & Persistence) ────────────
         import requests
         session_obj = requests.Session()
@@ -728,6 +794,12 @@ def analyze_url():
         content_bundle["robots"] = json.dumps(data_robots)
         content_bundle["llms"] = json.dumps(data_llms)
         metrics["crawlers"] = data_robots.get("ai_crawler_status", {})
+=======
+        # A. Sitemap discovery
+        rob = fetch_robots_txt(url) if fetch_robots_txt else {}
+        content_bundle["robots"] = rob.get("content", "Not Found")
+        metrics["crawlers"] = rob.get("ai_crawler_status", {})
+>>>>>>> origin/main
         
         discovery_queue = []
         if rob.get("sitemaps"):
@@ -747,6 +819,7 @@ def analyze_url():
             except ImportError as e:
                 print(f"[DEBUG] Failed to import recursion crawler: {e}")
 
+<<<<<<< HEAD
         # B. Homepage extraction (Forcing Playwright to bypass initial bot challenges)
         res = fetch_page(url, use_playwright=True)
         brand_name = domain.split('.')[0].capitalize() # Fallback
@@ -778,6 +851,12 @@ def analyze_url():
             h1s = res.get("h1_tags", [])
             if h1s: brand_name = h1s[0]
             
+=======
+        # B. Homepage extraction
+        res = fetch_page(url)
+        if res and not res.get("errors"):
+            content_bundle["page"] = res.get("text_content", "")
+>>>>>>> origin/main
             metrics["schema_types"].update([s.get("@type") for s in res.get("structured_data", []) if isinstance(s, dict)])
             for link in res.get("internal_links", []):
                 l_url = link["url"].split("#")[0].rstrip("/")
@@ -785,6 +864,7 @@ def analyze_url():
                     discovery_queue.append(l_url)
                     visited.add(l_url)
             content_bundle["menu_structure"] = [l.get("text", "") for l in res.get("internal_links", [])[:50]]
+<<<<<<< HEAD
         
         # Step 1.2: Brand Visibility Scan (Wikipedia/Reddit/YouTube)
         if generate_brand_report:
@@ -812,12 +892,27 @@ def analyze_url():
                 lambda u: fetch_page(u, use_playwright=pivot_to_browser, session=session_obj), 
                 to_audit
             ))
+=======
+            
+        # C. Brilliant Selection Logic (Top 1000)
+        discovery_queue = list(dict.fromkeys(discovery_queue))
+        metrics["total_discovered"] = len(discovery_queue)
+        
+        # Sort by brilliant rank scores
+        discovery_queue.sort(key=rank_url, reverse=True)
+        to_audit = discovery_queue[:MAX_AUDIT]
+        
+        # Power Worker Pool (15 Concurrency for 1,000 URLs)
+        with ThreadPoolExecutor(max_workers=15) as crawl_exec:
+            results_crawl = list(crawl_exec.map(fetch_page, to_audit))
+>>>>>>> origin/main
             for r in results_crawl:
                 if not r: continue
                 if r.get("status_code", 0) >= 400: metrics["broken_links"] += 1
                 if not r.get("errors"):
                     content_bundle["internal_pages"].append({
                         "url": r["url"],
+<<<<<<< HEAD
                         "meta": r.get("description", ""),
                         "h1": r.get("h1_tags", [""])[0] if r.get("h1_tags") else "",
                         "content": r.get("text_content", ""),
@@ -853,6 +948,17 @@ def analyze_url():
         metrics["echo_penalty"] = echo_penalty
         print(f"[DEBUG] [STEP 1.7] Echo Penalty Detected: {echo_penalty}% Similarity.")
         
+=======
+                        # Optimized to fit 1000 pages (1000 * 400 = 400k characters)
+                        "meta": r.get("description", ""),
+                        "h1": r.get("h1_tags", [""])[0] if r.get("h1_tags") else "",
+                        "content": r["text_content"][:400] 
+                    })
+                    metrics["schema_types"].update([s.get("@type") for s in r.get("structured_data", []) if isinstance(s, dict)])
+        
+        metrics["deep_audited"] = len(content_bundle["internal_pages"])
+        
+>>>>>>> origin/main
         # D. Enterprise-Scale Normalization (Preventing 850% Overload)
         all_text = " ".join([p.get("content", "") for p in content_bundle["internal_pages"]])
         metrics["faq_count"] = len(re.findall(r"([^.!?]*\?)\s", all_text)[:100])
@@ -871,6 +977,7 @@ def analyze_url():
         if lms.get("llms_txt", {}).get("exists"):
             content_bundle["llms"] = lms.get("llms_txt", {}).get("content", "")
     
+<<<<<<< HEAD
     # ── 2. Specialized Specialist Audits (Parallel 3x Speed) ───────────
     api_key = session.get("claude_api_key", CLAUDE_API_KEY)
     specialist_agents = [a for a in AGENT_MAPPING.keys() if a not in ["geo-executive-roadmap", "geo-echo"]]
@@ -894,6 +1001,32 @@ def analyze_url():
     
     meta_insight = master_result.get("summary", "Analysis complete.")
     roadmap_fixes = master_result.get("top_fixes", [])
+=======
+    # ── 2. Sequential Elite Agent Audit (Staggered to prevent 429s) ───
+    api_key = session.get("claude_api_key", CLAUDE_API_KEY)
+    agents = list(AGENT_MAPPING.keys())
+    results = []
+    
+    print(f"[DEBUG] [STEP 3] Igniting {len(agents)} AI Cloud Agents Sequentially...")
+    
+    # We run sequentially for large audits to respect Claude TPM limits.
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        futures = {executor.submit(run_agent, agent_id, url, content_bundle, api_key, audit_id): agent_id for agent_id in agents}
+        for future in futures:
+            results.append(future.result())
+            # Industrial Staggering: small pause between massive 100k token calls
+            time.sleep(2) 
+    
+    # ── 3. High-Standard Meta-Analysis (Final Synthesis) ──────────────
+    final_score = round(sum(r.get("score", 0) * r.get("weight", 0) for r in results))
+    boost = 12 if final_score < 40 else (8 if final_score < 70 else 5)
+    predicted_score = min(99, final_score + boost) 
+    
+    primary_threat = "Enterprise Scale Inconsistency" if metrics.get("deep_audited", 0) > 500 else "Shallow Contextual Depth"
+    if metrics.get("answer_blocks", 0) < 10: primary_threat = "Low Citation Intent"
+    
+    meta_insight = f"ELITE ENTERPRISE AUDIT: Found {metrics.get('total_discovered', 0)} URLs. Analyzed top {metrics.get('deep_audited', 0)} targets with Brilliant Ranking. Primary Threat: {primary_threat}."
+>>>>>>> origin/main
     
     print(f"[DEBUG] [STEP 4] Executing Master Data Synthesis & Final Score Calculation... (Score: {final_score})")
 
@@ -936,8 +1069,12 @@ def analyze_url():
         "_analysis_result.html",
         url=url, score=final_score, predicted_score=predicted_score, grade=grade,
         label=label, results=results, task_id=task_id, formula=FORMULA_TEXT,
+<<<<<<< HEAD
         metrics=metrics, meta_insight=meta_insight, roadmap_fixes=roadmap_fixes,
         missing_analysis=missing_analysis
+=======
+        metrics=metrics, meta_insight=meta_insight, missing_analysis=missing_analysis
+>>>>>>> origin/main
     )
 
 # ==============================================================================
@@ -978,6 +1115,7 @@ def settings():
     return render_template("settings.html", key_placeholder=key_placeholder)
 
 
+<<<<<<< HEAD
 @app.route("/compare", methods=["POST"])
 def compare_competitive():
     """Enterprise Benchmarking: Compare target vs competitor URL."""
@@ -990,5 +1128,7 @@ def compare_competitive():
         
     return render_template("compare.html", target=target_url, competitor=competitor_url)
 
+=======
+>>>>>>> origin/main
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
