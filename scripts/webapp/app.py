@@ -608,9 +608,12 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
         for r in data.get("results", []):
             if r.get("findings"):
                 for f in r["findings"]:
-                    f["title"] = f"{r['label']}: {f.get('title', 'Finding')}"
-                    # Find matching weakness to get evidence_url
-                    matching_weakness = next((w for w in r.get("weaknesses", []) if w.get("issue") in (f.get("description") or "")), None)
+                    if isinstance(f, str):
+                        f = {"title": "Discovery", "description": f, "severity": "medium"}
+                        
+                    f["title"] = f"{r.get('label', 'System')}: {f.get('title', 'Finding')}"
+                    # Find matching weakness to get evidence_url (Support both dict and legacy strings)
+                    matching_weakness = next((w for w in r.get("weaknesses", []) if isinstance(w, dict) and w.get("issue") in (f.get("description") or "")), None)
                     if matching_weakness:
                         f["evidence_url"] = matching_weakness.get("evidence_url")
                     report_data_pdf["findings"].append(f)
@@ -951,11 +954,22 @@ def analyze_url():
 # ==============================================================================
 @app.route("/download_pdf/<task_id>")
 def download_pdf(task_id):
-    """Serve the pre-generated PDF report."""
+    """Serve the pre-generated PDF report. Automatically reconstructs it from cache if /tmp is cleared."""
     pdf_path = f"/tmp/{task_id}.pdf"
     import os
     if not os.path.exists(pdf_path):
-        abort(404, description="PDF is missing from memory.")
+        # Attempt self-healing regeneration from disk cache
+        cache_path = Path(RESULTS_CACHE) / f"{task_id}.json"
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r") as f:
+                    cached_data = json.load(f)
+                build_and_upload_pdf(task_id, cached_data, get_supabase())
+            except Exception as e:
+                print(f"[ERROR] Failed to regenerate PDF from cache: {e}")
+        
+    if not os.path.exists(pdf_path):
+        abort(404, description="PDF is missing from memory and cache could not be reconstructed.")
         
     try:
         return send_file(
