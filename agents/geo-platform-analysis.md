@@ -20,12 +20,20 @@ Return the strategic analysis in JSON format inside <json> tags.
 {
   "score": 0,
   "score_after": 0,
+  "restricted": false,
+  "restriction_reason": "",
   "summary": "Full English strategic insight summary (2-3 lines).",
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["Weakness 1", "Weakness 2"],
-  "roadmap": ["Step 1: Description", "Step 2: Description", "Step 3: Description"]
+  "weaknesses": [{"issue": "Weakness 1", "evidence_url": "https://..."}],
+  "roadmap": ["Step 1: Description", "Step 2: Description"]
 }
 ```
+
+### ABSOLUTE DATA RESTRICTION RULE ("NO-BLUFF" PROTOCOL):
+If the platform data you require (e.g., robots.txt, Wikipedia entity Ground Truth, Meta tags) is entirely missing or unverified:
+1. You MUST set `"restricted": true`.
+2. You MUST explain the exact blockage in `"restriction_reason"` (e.g., "Site blocked robots.txt and no Wikidata Ground Truth was found").
+3. You MUST NOT hallucinate a score or assume an 8/10. Set score to 0.
 
 ### PINPOINT WEAKNESS DISCOVERY:
 - [-30] The Reputation Void (No authoritative Reddit/X/YouTube footprint).

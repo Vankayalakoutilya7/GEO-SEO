@@ -20,12 +20,20 @@ Return the strategic analysis in JSON format inside <json> tags.
 {
   "score": 0,
   "score_after": 0,
+  "restricted": false,
+  "restriction_reason": "",
   "summary": "Elite strategic summary in English (2-3 lines).",
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["Weakness 1", "Weakness 2"],
-  "roadmap": ["Step 1: Description", "Step 2: Description", "Step 3: Description"]
+  "weaknesses": [{"issue": "Weakness 1", "evidence_url": "https://..."}],
+  "roadmap": ["Step 1: Description", "Step 2: Description"]
 }
 ```
+
+### ABSOLUTE DATA RESTRICTION RULE ("NO-BLUFF" PROTOCOL):
+If the specific JSON-LD Schema data you require is completely missing or the payload implies extraction failed:
+1. You MUST set `"restricted": true`.
+2. You MUST explain the exact blockage in `"restriction_reason"` (e.g., "Crawler could not locate any JSON-LD structured data on the analyzed pages").
+3. You MUST NOT hallucinate a score or assume an 8/10. Set score to 0.
 
 ### PINPOINT WEAKNESS DISCOVERY:
 - [-20] Dead ItemProps (Outdated schema vocab).

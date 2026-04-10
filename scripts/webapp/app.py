@@ -115,6 +115,8 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
             "type": "object",
             "properties": {
                 "score": {"type": "integer", "description": "0-100 score for this metric."},
+                "restricted": {"type": "boolean", "description": "Set to true if you are restricted from auditing because required data is missing or blocked."},
+                "restriction_reason": {"type": "string", "description": "Detailed explanation of why the audit was restricted."},
                 "summary": {"type": "string", "description": "2-3 sentence executive summary."},
                 "weaknesses": {
                     "type": "array",
@@ -180,8 +182,14 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                     "label": AGENT_MAPPING.get(agent_id, {}).get("label", agent_id),
                     "weight": AGENT_MAPPING.get(agent_id, {}).get("weight", 0.2),
                     "tokens_used": tokens_used,
-                    "status": "SUCCESS"
+                    "status": "RESTRICTED" if parsed.get("restricted") else "SUCCESS"
                 })
+                
+                # Enforce No-Bluff visual warning
+                if parsed.get("restricted"):
+                    parsed["score"] = 0
+                    parsed["summary"] = f"🚨 [RESTRICTED DATA]: {parsed.get('restriction_reason')}\n\n{parsed.get('summary', '')}"
+
 
                 # Log Success to Supabase
                 sb = get_supabase()
@@ -189,7 +197,7 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                     try:
                         sb.table("agent_logs").insert({
                             "audit_id": audit_id, "agent_name": agent_id, "agent_score": parsed["score"],
-                            "status": "SUCCESS", "tokens_used": tokens_used, "error_message": None
+                            "status": parsed["status"], "tokens_used": tokens_used, "error_message": parsed.get("restriction_reason")
                         }).execute()
                     except Exception: pass
 
@@ -221,43 +229,37 @@ def prepare_agent_payload(agent_id: str, url: str, content_bundle: dict) -> str:
         
     pages = content_bundle.get('internal_pages', [])
     
-    # Define payload slices
+    # Define payload slices (Absolute Context Slices)
     if agent_id == "geo-schema":
-        # Full content for all 50 selected pages for structural depth
         schema_data = ""
         for p in pages:
             schema_data += f"--- SCHEMA FRAGMENT: {p['url']} ---\nJSON-LD: {json.dumps(p.get('structured_data', []))}\n\n"
-        return context + f"AUDIT DATA (FULL SCHEMA):\n{schema_data}\nTECH SPECS: {content_bundle.get('robots')} | {content_bundle.get('llms')}"
+        return context + f"AUDIT DATA (FULL SCHEMA ONLY):\n{schema_data}\n"
 
     elif agent_id == "geo-technical":
-        # Full technical headers and metrics for all 50 pages
         tech_data = ""
         for p in pages:
-            tech_data += f"--- TECH SCAN: {p['url']} ---\nHTTP: {json.dumps(p.get('security_headers', {}))}\nMETRICS: {p.get('page_weight_kb')}KB | TTFB: {p.get('ttfb_ms')}ms | SSR: {p.get('has_ssr')}\nOPTIMIZATION: Compressed: {p.get('is_compressed')} | Redirects: {len(p.get('redirect_chain', []))}\n"
-        return context + f"AUDIT DATA (TECHNICAL DEPTH):\n{tech_data}\nROBOTS: {content_bundle.get('robots')}\nLLMS: {content_bundle.get('llms')}"
+            tech_data += f"--- TECH SCAN: {p['url']} ---\nHTTP: {json.dumps(p.get('security_headers', {}))}\nMETRICS: {p.get('page_weight_kb')}KB | TTFB: {p.get('ttfb_ms')}ms | SSR: {p.get('has_ssr')}\nCOMPRESSED: {p.get('is_compressed')} | REDIRECTS: {len(p.get('redirect_chain', []))}\n"
+        return context + f"AUDIT DATA (TECHNICAL HEADERS ONLY):\n{tech_data}\nROBOTS: {content_bundle.get('robots')}"
 
     elif agent_id == "geo-content":
-        # Deep analysis of the full text (v6 Ground Truth Pulse: 10,000 chars for Primary)
         content_data = ""
         for i, p in enumerate(pages):
-            limit = 10000 if i == 0 else 1500 # 10k for the #1 ranked page
+            limit = 10000 if i == 0 else 1500 
             content_data += f"--- CONTENT DEEP DIVE: {p['url']} ---\nH1: {p.get('h1')}\nBODY: {p.get('content', '')[:limit]}\n"
-        return context + f"AUDIT DATA (CONTENT/EEAT):\n{content_data}\nHOMEPAGE: {content_bundle.get('page', '')[:3000]}"
+        return context + f"AUDIT DATA (TEXT CONTENT ONLY):\n{content_data}"
 
     elif agent_id == "geo-ai-visibility":
-        # Only Answer Blocks and Brand Markers for Visibility Agent
         visibility_data = ""
         for p in pages:
-            # Context Slicing v5.1: High-precision snippet extraction
-            visibility_data += f"--- VISIBILITY SCAN: {p['url']} ---\nH1: {p.get('h1')}\nSNIPPET: {p.get('content', '')[:400]}\n"
-        return context + f"AUDIT DATA (CITABILITY): \n{visibility_data}"
+            visibility_data += f"--- VISIBILITY SNIPPET: {p['url']} ---\nH1: {p.get('h1')}\nSNIPPET: {p.get('content', '')[:400]}\n"
+        return context + f"AUDIT DATA (SNIPPETS ONLY): \n{visibility_data}"
 
     elif agent_id == "geo-platform-analysis":
-        # Only Meta Tags and AI-Crawler Directives for Platform Agent
         platform_data = ""
         for p in pages:
             platform_data += f"--- PLATFORM ASSET: {p['url']} ---\nMETA: {p.get('meta', 'None')}\nH1: {p.get('h1')}\nCANONICAL: {p.get('canonical', 'Not Found')}\nSTATUS: {p.get('status_code', 200)}\n"
-        return context + f"AUDIT DATA (PLATFORM READINESS):\n{platform_data}\nROBOTS: {content_bundle.get('robots')}\nLLMS: {content_bundle.get('llms')}"
+        return context + f"AUDIT DATA (META & CRAWLER SIGNALS ONLY):\n{platform_data}\nROBOTS: {content_bundle.get('robots')}\nLLMS: {content_bundle.get('llms')}"
 
     elif agent_id == "geo-executive-roadmap":
         # THE MASTER STRATEGIST: Review specialist results and ROI

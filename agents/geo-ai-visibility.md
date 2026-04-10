@@ -21,12 +21,20 @@ Return a strategic analysis in JSON format inside <json> tags.
 {
   "score": 0,
   "score_after": 0,
+  "restricted": false,
+  "restriction_reason": "",
   "summary": "Elite strategic English insight (2-3 lines).",
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["Weakness 1", "Weakness 2"],
-  "roadmap": ["Step 1: Description", "Step 2: Description", "Step 3: Description"]
+  "weaknesses": [{"issue": "Weakness 1", "evidence_url": "https://..."}],
+  "roadmap": ["Step 1: Description", "Step 2: Description"]
 }
 ```
+
+### ABSOLUTE DATA RESTRICTION RULE ("NO-BLUFF" PROTOCOL):
+If the specific visibility data you require (e.g., H-tags, text snippets) is missing or obscured:
+1. You MUST set `"restricted": true`.
+2. You MUST explain the exact blockage in `"restriction_reason"` (e.g., "Crawler failed to extract functional snippets due to site rendering strategy").
+3. You MUST NOT hallucinate a score or assume an 8/10. Set score to 0.
 
 ### PINPOINT WEAKNESS DISCOVERY:
 - [-20] Navigational Dead Zones (Poor internal visibility for AI).

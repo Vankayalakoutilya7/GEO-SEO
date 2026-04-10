@@ -20,12 +20,20 @@ Return the strategic analysis in JSON format inside <json> tags.
 {
   "score": 0,
   "score_after": 0,
+  "restricted": false,
+  "restriction_reason": "",
   "summary": "Full English strategic insight summary (2-3 lines).",
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["Weakness 1", "Weakness 2"],
-  "roadmap": ["Step 1: Description", "Step 2: Description", "Step 3: Description"]
+  "weaknesses": [{"issue": "Weakness 1", "evidence_url": "https://..."}],
+  "roadmap": ["Step 1: Description", "Step 2: Description"]
 }
 ```
+
+### ABSOLUTE DATA RESTRICTION RULE ("NO-BLUFF" PROTOCOL):
+If the specific content data you require (e.g., H-tags, Body text, Paragraphs) is mostly missing or blocked by the target site:
+1. You MUST set `"restricted": true`.
+2. You MUST explain the exact blockage in `"restriction_reason"` (e.g., "Site blocked content extraction due to Single Page App rendering wall").
+3. You MUST NOT hallucinate a score or assume an 8/10. Set score to 0.
 
 ### PINPOINT WEAKNESS DISCOVERY:
 - [-25] Generic Hollow Content.
