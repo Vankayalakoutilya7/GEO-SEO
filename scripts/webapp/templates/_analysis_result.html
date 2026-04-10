@@ -1,0 +1,268 @@
+<div class="row g-4 animate-in">
+  <!-- Status Badge & Download/View PDF -->
+  <div class="col-12 d-flex justify-content-between align-items-center mb-4">
+    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-4 py-2 rounded-pill">
+      <i class="bi bi-shield-check me-2"></i> MULTI-AGENT AUDIT COMPLETE
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/download_pdf/{{ task_id }}?action=view" target="_blank" class="btn btn-primary rounded-pill px-4">
+        <i class="bi bi-eye me-2"></i> VIEW PDF
+      </a>
+      <a href="/download_pdf/{{ task_id }}" class="btn btn-outline-primary rounded-pill px-4">
+        <i class="bi bi-download me-2"></i> DOWNLOAD
+      </a>
+    </div>
+  </div>
+
+  <!-- Deep GEO Metrics Overview -->
+  <div class="col-12 mb-4">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="kpi-card p-4 text-center tooltip-trigger" data-bs-toggle="tooltip" data-bs-html="true" title="<div class='text-start'><b>FAQ FOUND:</b><br/>{% for f in metrics.faqs %}• {{ f }}<br/>{% endfor %}</div>">
+          <div class="small text-muted text-uppercase mb-2">FAQ Density</div>
+          <div class="h3 text-white fw-bold">{{ metrics.faq_count }} <span class="small opacity-50">FOUND</span></div>
+          <div class="progress mt-2" style="height: 4px"><div class="progress-bar bg-primary" id="faq-progress" style="width: 0%"></div></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card p-4 text-center tooltip-trigger" data-bs-toggle="tooltip" data-bs-html="true" title="<div class='text-start'><b>ANSWERS COVERED:</b><br/>{% for a in metrics.answers %}• {{ a[:60] }}...<br/>{% endfor %}</div>">
+          <div class="small text-muted text-uppercase mb-2">Answer Blocks</div>
+          <div class="h3 text-white fw-bold">{{ metrics.answer_blocks }} <span class="small opacity-50">FOUND</span></div>
+          <div class="progress mt-2" style="height: 4px"><div class="progress-bar bg-info" id="answer-progress" style="width: 0%"></div></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card p-4 text-center tooltip-trigger" data-bs-toggle="tooltip" title="Analysis covering: {{ metrics.schema_types | join(', ') }}">
+          <div class="small text-muted text-uppercase mb-2">Snippet Coverage</div>
+          <div class="h3 text-white fw-bold">{{ metrics.snippet_coverage }}%</div>
+          <div class="progress mt-2" style="height: 4px"><div class="progress-bar bg-success" id="snippet-progress" style="width: 0%"></div></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card p-4 text-center tooltip-trigger" data-bs-toggle="tooltip" data-bs-html="true" title="<div class='text-start'><b>Discovery:</b> {{ metrics.total_discovered }} URLs identified.<br><b>Deep Audit:</b> {{ metrics.deep_audited }} stratified sample pages analyzed in-depth.</div>">
+          <div class="small text-muted text-uppercase mb-2">Total Discovery</div>
+          <div class="h3 text-white fw-bold">{{ metrics.total_discovered }} <span class="small opacity-50">URLs</span></div>
+          <div class="progress mt-2" style="height: 4px"><div class="progress-bar bg-warning" style="width: 100%"></div></div>
+          <div class="small opacity-50 mt-1" style="font-size: 0.7rem">{{ metrics.deep_audited }} Deep Audited</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Safe progress bar population to avoid CSS lint issues
+    document.getElementById('faq-progress').style.width = '{{ (metrics.faq_count * 10) | round }}%';
+    document.getElementById('answer-progress').style.width = '{{ (metrics.answer_blocks * 20) | round }}%';
+    document.getElementById('snippet-progress').style.width = '{{ metrics.snippet_coverage }}%';
+    
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+  </script>
+
+  <div class="col-md-5">
+    <!-- Final Global Score -->
+    <div class="kpi-card text-center h-100 d-flex flex-column justify-content-center p-5 border-primary border-opacity-25 shadow-glow">
+      <h3 class="text-white small fw-bold text-uppercase mb-4" style="letter-spacing: 0.1em">Global GEO Score</h3>
+      <div class="score-circle mx-auto mb-4 tier-{{ score | score_tier }}" style="width: 14rem; height: 14rem; border-width: 12px; box-shadow: 0 0 30px rgba(var(--tier-rgb), 0.2)">
+        <span class="display-1 fw-bold">{{ score }}</span>
+        <span class="h4 opacity-50 mb-0">/100</span>
+      </div>
+      <h2 class="text-white fw-bold mb-2">{{ label }} Rating</h2>
+      <div class="small fw-bold text-primary mt-2">
+        <i class="bi bi-calculator me-1"></i> {{ formula }}
+      </div>
+
+      <div class="mt-4 p-3 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10 text-start">
+        <div class="small text-muted text-uppercase mb-2 text-primary fw-bold" style="letter-spacing: 0.05em">Industrial Audit Conclusion</div>
+        <div class="text-white fst-italic small" style="line-height: 1.6">{{ meta_insight }}</div>
+      </div>
+      
+      <div class="mt-5 p-3 rounded-4 bg-success bg-opacity-5 border border-success border-opacity-10">
+        <div class="small text-success fw-bold text-uppercase mb-1">Predicted Score Post-Optimization</div>
+        <div class="h3 text-white fw-bold mb-0">{{ predicted_score }} <span class="small opacity-50">/100</span></div>
+        <div class="text-muted small mt-1">Estimated +{{ predicted_score - score }} boost from high-priority fixes</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-7">
+    <div class="row g-3">
+      {% for res in results %}
+      <div class="col-md-6">
+        <div class="kpi-card p-4 transition-all hover-up h-100">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h4 class="h6 fw-bold text-white mb-0">{{ res.label }}</h4>
+            <span class="badge bg-{{ res.score | score_tier }} bg-opacity-10 text-{{ res.score | score_tier }} border border-{{ res.score | score_tier }} border-opacity-25">
+              {{ res.score }}%
+            </span>
+          </div>
+          <p class="text-muted small mb-0" style="display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.6;">
+            {{ res.summary }}
+          </p>
+          <hr class="border-secondary opacity-25 my-3">
+          <div class="d-flex justify-content-between align-items-center mt-auto">
+            <span class="small badge bg-dark text-white border border-secondary border-opacity-25 py-1 px-2 rounded-2" title="LLM Tokens Used">
+              <i class="bi bi-braces text-primary me-1"></i> {{ res.tokens_used }} Tokens
+            </span>
+            {% if res.status == 'SUCCESS' %}
+              <span class="small text-success fw-bold" style="font-size: 0.75rem;"><i class="bi bi-check-circle-fill"></i> OK</span>
+            {% else %}
+              <span class="small text-danger fw-bold" style="font-size: 0.75rem;"><i class="bi bi-x-circle-fill"></i> {{ res.status|replace('FAILED_RATE_LIMIT', 'RATE LIMIT') }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Advanced Technical Core Vitals (Context Slicing v5.1) -->
+  <div class="col-12 mt-4 mb-2">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="kpi-card p-3 d-flex align-items-center gap-3">
+           <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary"><i class="bi bi-file-zip h4 mb-0"></i></div>
+           <div>
+             <div class="small text-muted text-uppercase" style="font-size: 0.65rem">Server Optimization</div>
+             <div class="h5 mb-0 text-white fw-bold">Compression: 
+               {% if metrics.compression_status %}<span class="text-success">Brotli/Gzip</span>{% else %}<span class="text-warning">None Detected</span>{% endif %}
+             </div>
+           </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card p-3 d-flex align-items-center gap-3">
+           <div class="rounded-circle bg-info bg-opacity-10 p-3 text-info"><i class="bi bi-arrow-repeat h4 mb-0"></i></div>
+           <div>
+             <div class="small text-muted text-uppercase" style="font-size: 0.65rem">Ingestion Health</div>
+             <div class="h5 mb-0 text-white fw-bold">Redirects: 
+               {% if metrics.redirect_hops == 0 %}<span class="text-success">Clean (0 Hops)</span>{% else %}<span class="text-warning">{{ metrics.redirect_hops }} Hops</span>{% endif %}
+             </div>
+           </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card p-3 d-flex align-items-center gap-3">
+           <div class="rounded-circle bg-success bg-opacity-10 p-3 text-success"><i class="bi bi-lightning-charge h4 mb-0"></i></div>
+           <div>
+             <div class="small text-muted text-uppercase" style="font-size: 0.65rem">Engine Response</div>
+             <div class="h5 mb-0 text-white fw-bold">Avg TTFB: <span class="text-white">{{ metrics.avg_ttfb }}ms</span></div>
+           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive Strategic Roadmap (Phase 7 Synthesis) -->
+  <div class="col-12 mt-4">
+    <div class="kpi-card p-4 border border-primary border-opacity-25" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-white h5 fw-bold mb-0">
+          <i class="bi bi-compass me-2 text-primary"></i> 30-60-90 Day Strategic ROI Roadmap
+        </h3>
+        <span class="badge bg-primary px-3 py-2 rounded-pill">Elite Pass</span>
+      </div>
+      
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+           <div class="p-3 rounded bg-white bg-opacity-5 border border-white border-opacity-10 h-100">
+             <div class="fw-bold text-primary mb-2">DAYS 1-30: TECHNICAL PULSE</div>
+             <p class="small text-muted mb-0">High-impact, rapid deployment items. Securing the technical foundation and bot access.</p>
+           </div>
+        </div>
+        <div class="col-md-4">
+           <div class="p-3 rounded bg-white bg-opacity-5 border border-white border-opacity-10 h-100">
+             <div class="fw-bold text-info mb-2">DAYS 31-60: SEMANTIC INJECTION</div>
+             <p class="small text-muted mb-0">Injecting authoritative signal blocks and optimizing answer-density for LLM ingestion.</p>
+           </div>
+        </div>
+        <div class="col-md-4">
+           <div class="p-3 rounded bg-white bg-opacity-5 border border-white border-opacity-10 h-100">
+             <div class="fw-bold text-success mb-2">DAYS 61-90: AUTHORITY SCALING</div>
+             <p class="small text-muted mb-0">Deep entity mapping and cross-platform visibility expansions for sustainable GEO dominance.</p>
+           </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="small text-muted text-uppercase mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Top 5 Strategic Moves</div>
+        <div class="d-flex flex-column gap-3">
+          {% for fix in roadmap_fixes[:5] %}
+          <div class="d-flex align-items-start gap-3 p-3 rounded bg-dark bg-opacity-50 border-start border-4 border-primary">
+            <div class="text-white small fw-bold mt-1">{{ loop.index }}</div>
+            <div class="text-white small">{{ fix }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 mt-5">
+    <div class="kpi-card p-5">
+      <h3 class="text-white h5 fw-bold mb-5"><i class="bi bi-list-check me-2 text-primary"></i> Expert Specialist Analysis</h3>
+      
+      <div class="row g-5">
+        {% for res in results %}
+        <div class="col-lg-6">
+          <div class="d-flex align-items-center gap-3 mb-4">
+             <i class="bi bi-circle-fill text-{{ res.score | score_tier }}" style="font-size: 0.6rem"></i>
+             <h5 class="mb-0 text-white fw-bold">{{ res.label }} ({{ res.score }}%)</h5>
+          </div>
+          <ul class="list-unstyled">
+            {% if res.top_fixes %}
+              {% for fix in res.top_fixes %}
+              <li class="mb-3 d-flex gap-3 text-muted small">
+                <i class="bi bi-arrow-right-short text-primary" style="font-size: 1.2rem; transform: translateY(-4px)"></i>
+                <span>{{ fix }}</span>
+              </li>
+              {% endfor %}
+            {% else %}
+              <li class="text-muted small opacity-50 italic">Agent provided general strategic feedback (refer to PDF for full details).</li>
+            {% endif %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 mt-5">
+    <div class="kpi-card p-5" style="border-style: dashed; border-color: rgba(255,255,255,0.1)">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h3 class="text-white h5 fw-bold mb-3">
+            <i class="bi bi-info-circle me-2 text-primary"></i> Transparency & Data Fidelity
+          </h3>
+          <p class="text-muted small mb-4">
+            To ensure the most realistic scores, we analyze real-world technical data. However, some deep-web signals are currently estimated:
+          </p>
+          <div class="row g-3">
+            {% for item in missing_analysis %}
+            <div class="col-md-6 d-flex align-items-center gap-2 text-muted small opacity-75">
+              <i class="bi bi-x-circle text-danger"></i> {{ item }}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-4 text-center border-start border-white border-opacity-10">
+          <div class="badge bg-primary bg-opacity-10 text-primary mb-2">SOURCE QUALITY</div>
+          <div class="h3 text-white fw-bold">HIGH</div>
+          <div class="text-muted small">Checked: Homepage, Robots.txt, LLMS.txt, Meta-Tags, Schema</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hover-up:hover { transform: translateY(-5px); }
+  .shadow-glow { box-shadow: 0 0 50px rgba(124, 77, 255, 0.1); }
+  .tier-good { --tier-rgb: 0, 230, 118; }
+  .tier-moderate { --tier-rgb: 255, 196, 0; }
+  .tier-poor { --tier-rgb: 255, 82, 82; }
+  .tier-critical { --tier-rgb: 255, 23, 68; }
+</style>

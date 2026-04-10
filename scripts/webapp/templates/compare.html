@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Competitive Benchmarking — GEO-SEO{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-5 animate-in">
+  <div class="col-lg-10">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+      <div>
+        <h1 class="display-5 fw-bold text-white mb-2">Competitive <span class="text-primary">Benchmarking</span></h1>
+        <p class="lead text-muted">Direct comparison between {{ target }} and {{ competitor }}.</p>
+      </div>
+      <a href="/" class="btn btn-outline-light rounded-pill px-4">
+        <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+      </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <!-- Target Domain Card -->
+      <div class="col-md-6">
+        <div class="kpi-card h-100 border-primary border-opacity-50">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+              <span class="badge bg-primary mb-2">TARGET DOMAIN</span>
+              <h3 class="text-white fw-bold mb-0">{{ target }}</h3>
+            </div>
+            <div id="target-loading" class="spinner-border text-primary spinner-border-sm" role="status" style="display: none;"></div>
+          </div>
+          
+          <div id="target-details" class="py-3">
+            <p class="text-muted small">Enter URL and click start analysis to begin benchmarking.</p>
+            <form hx-post="/analyze_url" 
+                  hx-target="#target-analysis-results" 
+                  hx-indicator="#target-loading"
+                  hx-vals='{"url": "{{ target }}"}'>
+              <button type="submit" class="btn btn-primary w-100">
+                Run Audit on Target <i class="bi bi-play-fill ms-2"></i>
+              </button>
+            </form>
+          </div>
+          <div id="target-analysis-results" class="mt-4"></div>
+        </div>
+      </div>
+
+      <!-- Competitor Domain Card -->
+      <div class="col-md-6">
+        <div class="kpi-card h-100 border-secondary border-opacity-50">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+              <span class="badge bg-secondary mb-2">COMPETITOR</span>
+              <h3 class="text-white fw-bold mb-0">{{ competitor }}</h3>
+            </div>
+            <div id="competitor-loading" class="spinner-border text-secondary spinner-border-sm" role="status" style="display: none;"></div>
+          </div>
+          
+          <div id="competitor-details" class="py-3">
+            <p class="text-muted small">Run analysis on competitor to see Comparative Share-of-Voice.</p>
+            <form hx-post="/analyze_url" 
+                  hx-target="#competitor-analysis-results" 
+                  hx-indicator="#competitor-loading"
+                  hx-vals='{"url": "{{ competitor }}"}'>
+              <button type="submit" class="btn btn-secondary w-100">
+                Run Audit on Competitor <i class="bi bi-play-fill ms-2"></i>
+              </button>
+            </form>
+          </div>
+          <div id="competitor-analysis-results" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Summary (Placeholder for after both are run) -->
+    <div class="kpi-card bg-opacity-10 border-0 text-center py-5">
+      <i class="bi bi-bar-chart-fill display-4 text-muted mb-3"></i>
+      <h4 class="text-white fw-bold">Comparative Insight Engine</h4>
+      <p class="text-muted px-5">Analyze both domains to generate a semantic gap report. This will identify keywords and entities where your competitor has higher AI citability than you.</p>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .kpi-card {
+    transition: transform 0.3s ease;
+  }
+  .kpi-card:hover {
+    transform: translateY(-5px);
+  }
+</style>
+{% endblock %}

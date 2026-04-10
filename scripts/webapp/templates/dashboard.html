@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}GEO-SEO AI Analyzer{% endblock %}
+
+{% block content %}
+{% if missing_deps %}
+<div class="alert alert-danger border-0 shadow-lg rounded-4 mb-5 animate-in stagger-1" role="alert">
+  <div class="d-flex align-items-center">
+    <div class="fs-1 me-4">⚠️</div>
+    <div>
+      <h4 class="alert-heading fw-bold mb-1">Missing Dependencies Detected</h4>
+      <p class="mb-0">The application is running in an environment without <strong>BeautifulSoup4</strong> or <strong>lxml</strong>. Analysis will be empty.</p>
+      <hr>
+      <p class="mb-0 small text-uppercase fw-bold tracking-wider">Solution: Run the app using <code>./venv/bin/python3 scripts/webapp/app.py</code></p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row justify-content-center pt-5 animate-in">
+  <div class="col-lg-8 text-center">
+    <h1 class="display-3 fw-bold text-white mb-3">GEO-SEO <span class="text-primary">Analyzer</span></h1>
+    <p class="lead text-muted mb-5">Analyze any website's visibility for Generative AI search (Claude, ChatGPT, Perplexity).</p>
+    
+    <div class="kpi-card shadow-lg p-2 mb-5">
+      <form hx-post="/analyze_url"
+            hx-target="#analysis-results"
+            hx-swap="innerHTML"
+            hx-indicator="#loading-spinner"
+            class="d-flex gap-2">
+        <input type="text" name="url" 
+               class="form-control form-control-lg bg-transparent border-0 text-white" 
+               placeholder="Enter website URL (e.g., example.com)" 
+               required
+               style="font-size: 1.25rem;">
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+          Analyze <i class="bi bi-stars ms-2"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading-spinner" class="htmx-indicator py-5">
+      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+      <p class="mt-3 text-primary fw-bold">Claude is crawling and analyzing technical signals...</p>
+    </div>
+
+    <!-- Results section -->
+    <div id="analysis-results" class="text-start">
+      <!-- Result will be loaded here -->
+    </div>
+    
+    <!-- Historical Audit Table -->
+    {% if history %}
+    <div class="mt-5 animate-in" style="animation-delay: 0.2s;">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <h4 class="text-white fw-bold m-0"><i class="bi bi-clock-history me-2"></i>Historical Audits</h4>
+        <span class="badge bg-primary rounded-pill px-3 py-2 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Live Database Sync</span>
+      </div>
+      
+      <div class="table-responsive rounded-4 border border-dark overflow-hidden">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead style="background: rgba(255,255,255,0.05);">
+            <tr>
+              <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.8rem; font-weight: 600;">S.No</th>
+              <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.8rem; font-weight: 600;">Domain</th>
+              <th class="py-3 px-4 text-muted text-uppercase text-center" style="font-size: 0.8rem; font-weight: 600;">Status</th>
+              <th class="py-3 px-4 text-muted text-uppercase text-center" style="font-size: 0.8rem; font-weight: 600;">Tokens Used</th>
+              <th class="py-3 px-4 text-muted text-uppercase text-center" style="font-size: 0.8rem; font-weight: 600;">Score</th>
+              <th class="py-3 px-4 text-muted text-uppercase text-end" style="font-size: 0.8rem; font-weight: 600;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body" style="border-top: 1px solid rgba(255,255,255,0.1);">
+            {% for item in history %}
+            <tr class="history-row" style="transition: all 0.2s ease; display: none;">
+              <td class="px-4 py-3 text-muted">#{{ item.serial }}</td>
+              <td class="px-4 py-3 fw-bold text-white">{{ item.url }}</td>
+              
+              <td class="px-4 py-3 text-center">
+                {% if item.status == 'SUCCESS' %}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>SUCCESS</span>
+                {% elif item.status == 'RUNNING' %}
+                  <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1"><i class="bi bi-arrow-repeat spin me-1"></i>RUNNING</span>
+                {% else %}
+                  <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1"><i class="bi bi-x-octagon-fill me-1"></i>FAILED</span>
+                {% endif %}
+              </td>
+              
+              <td class="px-4 py-3 text-center font-monospace text-warning">
+                <i class="bi bi-cpu me-1"></i>{{ "{:,}".format(item.tokens) }}
+              </td>
+              
+              <td class="px-4 py-3 text-center">
+                {% if item.score >= 80 %}
+                  <span class="text-success fw-bold fs-5">{{ item.score }}<span class="text-muted fs-6">/100</span></span>
+                {% elif item.score >= 60 %}
+                  <span class="text-warning fw-bold fs-5">{{ item.score }}<span class="text-muted fs-6">/100</span></span>
+                {% else %}
+                  <span class="text-danger fw-bold fs-5">{{ item.score }}<span class="text-muted fs-6">/100</span></span>
+                {% endif %}
+              </td>
+              
+              <td class="px-4 py-3 text-end">
+                {% if item.pdf_url %}
+                  <a href="{{ item.pdf_url }}" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3" title="View Secure PDF Audit">
+                    <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> PDF
+                  </a>
+                {% else %}
+                  <span class="text-muted fst-italic" style="font-size: 0.85rem;">Pending</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination Controls -->
+      <div id="pagination-controls" class="text-center mt-3" style="display: none;">
+        <button id="see-next-btn" class="btn btn-outline-primary rounded-pill px-4 py-2" onclick="showNextFive()">
+          See Next <i class="bi bi-chevron-down ms-1"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Client-Side Pagination Logic -->
+    <script>
+      let currentVisible = 0;
+      const step = 5;
+      const rows = document.querySelectorAll('.history-row');
+      const nextBtnContainer = document.getElementById('pagination-controls');
+
+      function showNextFive() {
+        const totalRows = rows.length;
+        let count = 0;
+        
+        while (count < step && currentVisible < totalRows) {
+          rows[currentVisible].style.display = 'table-row';
+          currentVisible++;
+          count++;
+        }
+        
+        if (currentVisible >= totalRows) {
+          nextBtnContainer.style.display = 'none';
+        } else {
+          nextBtnContainer.style.display = 'block';
+        }
+      }
+
+      // Initialize the first 5 rows on load
+      if (rows.length > 0) {
+        showNextFive();
+      }
+    </script>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  .kpi-card:focus-within {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 40px rgba(124, 77, 255, 0.2) !important;
+  }
+</style>
+{% endblock %}

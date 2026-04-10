@@ -1,0 +1,19 @@
+{% for note in p.notes | reverse %}
+<div class="p-3 mb-3 rounded-3 border border-secondary border-opacity-10 bg-white bg-opacity-5 {% if note.text.startswith('AI ANALYSIS:') %}border-primary border-opacity-25 bg-primary bg-opacity-5{% endif %}">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="small fw-bold text-muted text-uppercase" style="letter-spacing: 0.05em">
+      <i class="bi bi-clock me-1"></i>{{ note.date[:16] | replace("T", " ") }}
+    </div>
+    {% if note.text.startswith('AI ANALYSIS:') %}
+    <span class="badge bg-primary bg-opacity-25 text-primary small border border-primary border-opacity-10">
+      <i class="bi bi-robot me-1"></i> Claude Insight
+    </span>
+    {% endif %}
+  </div>
+  <div class="text-white small" style="line-height: 1.6; white-space: pre-wrap;">{{ note.text }}</div>
+</div>
+{% else %}
+<div class="text-center py-4 text-muted small">
+  <p class="mb-0">No notes yet. Try analyzing with AI!</p>
+</div>
+{% endfor %}

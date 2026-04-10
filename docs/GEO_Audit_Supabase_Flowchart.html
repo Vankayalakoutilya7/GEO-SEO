@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO Audit Phase 3 Flowchart</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 800px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 2rem;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Phase 3: Synthesis, Reporting & Supabase Integration</h2>
+        <pre class="mermaid">
+            flowchart TD
+                subgraph Phase 3 [Phase 3: Synthesis, Reporting & Supabase Integration]
+                    P3[Score Synthesis from 5 Subagents] --> R1[Calculate Weighted GEO Composite Score]
+                    R1 --> R2[(Supabase: Store 'projects', 'audits', 'agent_logs')]
+                    R2 --> R3[Generate PDF Report & Store in S3]
+                    R3 --> R4[Generate Final Markdown Output]
+                end
+                
+                R4 --> End([Report Generated: GEO-AUDIT-REPORT.md & PDF])
+                
+                style P3 fill:#f9f,stroke:#333,stroke-width:2px
+                style R2 fill:#4caf50,color:white,stroke:#333,stroke-width:2px
+                style R3 fill:#2196f3,color:white,stroke:#333,stroke-width:2px
+        </pre>
+    </div>
+</body>
+</html>
