@@ -104,6 +104,15 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
     # ── Context Slicing (Optimized Token Usage) ──────────────
     data_context = prepare_agent_payload(agent_id, url, content_bundle)
 
+    # ── Agent Debug Logging (Transparency) ──────────────
+    try:
+        import os
+        os.makedirs("scratch/payloads", exist_ok=True)
+        with open(f"scratch/payloads/{agent_id}_payload.txt", "w", encoding="utf-8") as f:
+            f.write(f"=== SYSTEM PROMPT ===\n{prompt}\n\n=== CONTEXT PAYLOAD ===\n{data_context}")
+    except Exception as e:
+        print(f"[DEBUG] Failed to write payload log: {e}")
+
     # ── Claude 4 Safety Net (Current for April 2026) ──────────────
     models_to_try = ["claude-haiku-4-5"]
     
