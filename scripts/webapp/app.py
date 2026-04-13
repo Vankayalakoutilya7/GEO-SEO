@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file if it exists
+# Load environment variables from .env file if it exists(supabase)
 load_dotenv()
 
 # Add parent directory to sys.path to import fetch_page

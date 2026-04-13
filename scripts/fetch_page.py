@@ -10,18 +10,21 @@ import re
 from urllib.parse import urljoin, urlparse
 
 try:
+    # Used to make HTTP connections to the target websites. It downloads the raw HTML content of pages, fetches robots.txt and sitemaps, and maintains cross-request sessions (to hold cookies and prevent blocks) when crawling.
     import requests
+    # Used to parse the raw HTML that requests downloads. It surgically extracts the exact elements the SEO agents need—pulling <h1> tags, scraping body text while ignoring noise (like <script> or footer tags), extracting internal links for the crawler, and isolating hidden JSON-LD structured data.
     from bs4 import BeautifulSoup
 except ImportError:
     print("WARNING: Required packages (requests, bs4) not installed. Crawling functions will be disabled.")
 
 try:
+    #Unlike requests, Playwright executes JavaScript and renders the page exactly as a real user would see it.
     from playwright.sync_api import sync_playwright
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-# Common AI crawler user agents for testing
+# Common AI crawler user agents for testing. like ID card for bots
 AI_CRAWLERS = {
     "GPTBot": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)",
     "ClaudeBot": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +https://www.anthropic.com/claude-bot)",
@@ -30,6 +33,7 @@ AI_CRAWLERS = {
     "BingBot": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
 }
 
+# When you use a script to scrape a website, the server can easily tell it’s a script because it lacks the "baggage" a real browser carries. These DEFAULT_HEADERS mimic the exact metadata sent by a real person using Google Chrome on a Mac.
 DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -45,6 +49,7 @@ DEFAULT_HEADERS = {
     "Cache-Control": "max-age=0",
 }
 
+# rotational pool Think of it as a spy who changes their hat, glasses, and jacket every time they walk past the same security guard.
 USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -52,7 +57,7 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:124.0) Gecko/20100101 Firefox/124.0",
 ]
 
-
+#what content to take and store
 def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, session: requests.Session = None) -> dict:
     """Fetch a page and return structured analysis data."""
     result = {
@@ -218,7 +223,8 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
         result["errors"].append(f"Connection error: {str(e)}")
     except Exception as e:
         result["errors"].append(f"Unexpected error: {str(e)}")
-
+#If the root div has less than 50 characters (text_length < 50) and the whole page has fewer than 200 words, it flags the page as has_ssr_content = False.
+#Why? If a page is that empty, it means the content is likely hidden behind a JavaScript "wall" that a simple requests call can't see.
     # Playwright Fallback if requested or if SSR seems missing
     if (use_playwright or not result.get("has_ssr_content")) and PLAYWRIGHT_AVAILABLE:
         try:
@@ -416,7 +422,7 @@ def fetch_llms_txt(url: str, timeout: int = 15) -> dict:
 
     return result
 
-
+#extracts data by removing unwanted tags
 def extract_content_blocks(html: str) -> list:
     """Extract content blocks for citability analysis."""
     soup = BeautifulSoup(html, "lxml")
@@ -480,7 +486,7 @@ def extract_content_blocks(html: str) -> list:
     return blocks
 
 
-def crawl_sitemap(url: str, max_pages: int = 200, timeout: int = 20) -> list:
+def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20) -> list:
     """Crawl sitemap.xml to discover pages (Industrial Scale: 200)."""
     parsed = urlparse(url)
     sitemap_urls = [
