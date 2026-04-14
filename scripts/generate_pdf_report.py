@@ -25,6 +25,7 @@ import sys
 import json
 import os
 from datetime import datetime
+import html
 
 try:
     from reportlab.lib.pagesizes import letter, A4
@@ -677,7 +678,7 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
                 sev_color = TEXT_SECONDARY
 
             elements.append(Paragraph(
-                f'<font color="{sev_color.hexval()}">[{severity}]</font> <b>{title}</b>',
+                f'<font color="{sev_color.hexval()}">[{severity}]</font> <b>{html.escape(title)}</b>',
                 styles['BodyText_Custom']
             ))
             if description:
@@ -694,7 +695,10 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
                         render_lines.append(line)
                 
                 for rl in render_lines:
-                    elements.append(Paragraph(rl, styles['Recommendation']))
+                    # Escape text but allow our supported <b> and <i> tags if they were already there
+                    # Actually, better to escape everything for now to be 100% safe from Agent hallucinated HTML
+                    safe_rl = html.escape(rl)
+                    elements.append(Paragraph(safe_rl, styles['Recommendation']))
                 
                 # Add Evidence URL if present
                 if finding.get("evidence_url"):
@@ -708,32 +712,6 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
 
     elements.append(PageBreak())
 
-    # ============================================================
-    # READY-TO-DEPLOY CODE SNIPPETS
-    # ============================================================
-    suggested_code = data.get("suggested_code", [])
-    # Flatten suggested_code from agents if it's nested
-    if not suggested_code:
-        for agent_results in data.get("agent_results", {}).values():
-            if isinstance(agent_results, dict) and "suggested_code" in agent_results:
-                suggested_code.extend(agent_results.get("suggested_code", []))
-
-    if suggested_code:
-        elements.append(Paragraph("Ready-to-Deploy Code Snippets", styles['SectionHeader']))
-        elements.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
-        
-        for snippet in suggested_code:
-            elements.append(Paragraph(f"FILE: {snippet.get('file_name', 'Unnamed File')}", styles['SubHeader']))
-            code_box_style = ParagraphStyle(
-                'CodeBox', fontName='Courier', fontSize=8, textColor=TEXT_PRIMARY,
-                backColor=MEDIUM_BG, borderPadding=5, leading=10
-            )
-            # Basic escaping and newline handling for PDF
-            code_text = snippet.get("code", "").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
-            elements.append(Paragraph(code_text, code_box_style))
-            elements.append(Spacer(1, 10))
-            
-        elements.append(PageBreak())
 
     # ============================================================
     # PRIORITIZED ACTION PLAN

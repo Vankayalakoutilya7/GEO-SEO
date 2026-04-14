@@ -31,6 +31,7 @@ except ImportError:
 try:
     #Unlike requests, Playwright executes JavaScript and renders the page exactly as a real user would see it.
     from playwright.sync_api import sync_playwright
+    from playwright_stealth import stealth_sync
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -69,7 +70,7 @@ USER_AGENTS = [
 ]
 
 #what content to take and store
-def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, session: requests.Session = None) -> dict:
+def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, session: any = None) -> dict:
     """Fetch a page and return structured analysis data."""
     result = {
         "url": url,
@@ -236,16 +237,20 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
         result["errors"].append(f"Unexpected error: {str(e)}")
 #If the root div has less than 50 characters (text_length < 50) and the whole page has fewer than 200 words, it flags the page as has_ssr_content = False.
 #Why? If a page is that empty, it means the content is likely hidden behind a JavaScript "wall" that a simple requests call can't see.
-    # Playwright Fallback if requested or if SSR seems missing
-    if (use_playwright or not result.get("has_ssr_content")) and PLAYWRIGHT_AVAILABLE:
+    # Universal Blockade Detection (Status 403, 429, or empty HTML/Title)
+    status_block = result.get("status_code") in [403, 401, 429]
+    content_block = not result.get("title") or not result.get("meta_tags") or not result.get("has_ssr_content")
+    blockade_text = any(x in (result["text_content"] or "").lower() for x in ["access denied", "please verify", "captcha", "bot detection"])
+    
+    triggers_pivot = use_playwright or status_block or content_block or blockade_text
+    
+    if triggers_pivot and PLAYWRIGHT_AVAILABLE:
         try:
+            import time
             with sync_playwright() as p:
-                # Use a real user agent to bypass basic bot filters
-                real_ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-                
                 browser = p.chromium.launch(headless=True)
                 
-                # Launch with stealth-like context (v4 Elite Stealth)
+                # Launch with Elite Stealth Context
                 context = browser.new_context(
                     user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                     viewport={"width": 1280, "height": 800},
@@ -256,38 +261,48 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                     timezone_id="America/New_York",
                 )
                 
-                # Ultimate Webdriver Masking
                 page = context.new_page()
-                page.add_init_script("delete Object.getPrototypeOf(navigator).webdriver")
+                # Apply Industrial Stealth (Bypass detection)
+                stealth_sync(page)
                 
                 # Visit with human-like jitter
-                page.goto(url, wait_until="domcontentloaded", timeout=timeout*1000)
-                page.wait_for_timeout(2000) # Wait for anti-bot to settle
+                page.goto(url, wait_until="load", timeout=60000)
                 
-                # Human Interaction Simulation
-                page.mouse.wheel(0, 500)
-                page.wait_for_timeout(1000)
+                # ADAPTIVE HYDRATION LOOP (v5)
+                # Monitors content stability rather than static timeouts
+                max_h_wait = 15 
+                h_start = time.time()
+                last_len = 0
+                while (time.time() - h_start) < max_h_wait:
+                    curr_len = len(page.content())
+                    if curr_len > last_len and curr_len > 1000:
+                        last_len = curr_len
+                        page.wait_for_timeout(2000)
+                    elif curr_len > 1000:
+                        break # Stability reached
+                    else:
+                        page.wait_for_timeout(1000)
+
+                # Human Interaction Simulation (Lazy-load triggers)
+                page.mouse.wheel(0, 800)
+                page.wait_for_timeout(1500)
+                page.mouse.wheel(0, -400) # Micro-jitter
                 
-                # Capture session state for handover
-                result["cookies"] = context.cookies()
-                result["browser_ua"] = context.evaluate("navigator.userAgent")
-                
+                # Capture and Parse
                 rendered_content = page.content()
                 rendered_soup = BeautifulSoup(rendered_content, "lxml")
                 rendered_text = rendered_soup.get_text(separator=" ", strip=True)
+
+                # Capture session state
+                result["cookies"] = context.cookies()
+                result["browser_ua"] = context.evaluate("navigator.userAgent")
                 
-                # Check for bot detection text in the rendered page
-                if "are you a human" in rendered_text.lower() or "captcha" in rendered_text.lower():
+                # Bot detection check
+                if any(x in rendered_text.lower() for x in ["are you a human", "captcha", "bot detection", "access denied"]):
                     result["bot_detected"] = True
-                    # If still blocked, try one last aggressive scroll
-                    page.mouse.wheel(0, -500)
-                    page.wait_for_timeout(1000)
-                    rendered_content = page.content()
-                    rendered_soup = BeautifulSoup(rendered_content, "lxml")
-                    rendered_text = rendered_soup.get_text(separator=" ", strip=True)
                 
-                # Final content capture
-                if len(rendered_text) > len(result["text_content"]) * 1.5:
+                # Final content capture logic
+                if len(rendered_text) > len(result["text_content"]) * 1.2 or (not result["text_content"] and len(rendered_text) > 200):
                     result["has_ssr_content"] = False
                     result["rendering_wall_detected"] = True
                     result["text_content"] = rendered_text
@@ -497,7 +512,7 @@ def extract_content_blocks(html: str) -> list:
     return blocks
 
 
-def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20) -> list:
+def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20, session: any = None) -> list:
     """Crawl sitemap.xml to discover pages (Industrial Scale: 200)."""
     parsed = urlparse(url)
     sitemap_urls = [
@@ -507,10 +522,14 @@ def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20) -> list:
     ]
 
     discovered_pages = set()
+    
+    # Use provided session or a temporary one
+    import requests
+    req = session if session else requests
 
     for sitemap_url in sitemap_urls:
         try:
-            response = requests.get(
+            response = req.get(
                 sitemap_url, headers=DEFAULT_HEADERS, timeout=timeout
             )
             if response.status_code == 200:
@@ -522,7 +541,7 @@ def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20) -> list:
                     if loc:
                         # Fetch child sitemap
                         try:
-                            child_resp = requests.get(
+                            child_resp = req.get(
                                 loc.text.strip(),
                                 headers=DEFAULT_HEADERS,
                                 timeout=timeout,
@@ -557,7 +576,7 @@ def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20) -> list:
     return list(discovered_pages)[:max_pages]
 
 
-def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwright: bool = False, session: requests.Session = None) -> list:
+def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwright: bool = False, session: any = None) -> list:
     """Lightweight link extractor for rapid BFS crawling."""
     import time
     import random
@@ -619,23 +638,22 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
     return list(set(links)), None
 
 
-def recursive_bfs_crawl(start_url: str, max_pages: int = 3000, timeout: int = 10) -> list:
-    """Fallback recursive BFS crawler to discover internal links if sitemap is missing."""
+def recursive_bfs_crawl(url: str, max_pages: int = 3000, timeout: int = 15, session: any = None) -> list:
+    """Strategic BFS discovery that avoids bot-walls and preserves speed."""
     import concurrent.futures
-    parsed_root = urlparse(start_url)
-    base_domain = parsed_root.netloc.replace("www.", "")
-
-    start_clean = start_url.split('#')[0].rstrip('/')
-    visited = set([start_clean])
+    base_domain = urlparse(url).netloc.replace("www.", "")
+    visited = {url.split("#")[0].rstrip("/")}
+    start_clean = url.split("#")[0].rstrip("/")
     queue = [start_clean]
     discovered = [start_clean]
     
     print(f"[DEBUG] [BFS Crawler] Starting fast recursive crawl for {base_domain} (Max: {max_pages})")
     
-    # Shared Session for Cookie Persistence (Stealth Mode)
+    # Use provided session or create a new one for stealth
     import requests
-    session = requests.Session()
-    session.headers.update(DEFAULT_HEADERS)
+    actual_session = session if session else requests.Session()
+    if not session:
+        actual_session.headers.update(DEFAULT_HEADERS)
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         while queue and len(discovered) < max_pages:
@@ -646,7 +664,7 @@ def recursive_bfs_crawl(start_url: str, max_pages: int = 3000, timeout: int = 10
             # Use Playwright only for the very first page of BFS discovery (the seed)
             # to ensure we get past Initial challenge screens and capture cookies.
             is_seed = (len(discovered) <= 1)
-            future_to_url = {executor.submit(fast_extract_links, u, base_domain, timeout, use_playwright=is_seed, session=session): u for u in batch}
+            future_to_url = {executor.submit(fast_extract_links, u, base_domain, timeout, use_playwright=is_seed, session=actual_session): u for u in batch}
             for future in concurrent.futures.as_completed(future_to_url):
                 try:
                     new_links, cookies = future.result()
@@ -654,7 +672,7 @@ def recursive_bfs_crawl(start_url: str, max_pages: int = 3000, timeout: int = 10
                     # If this was the seed run, prime the session with extracted cookies
                     if cookies:
                         for cookie in cookies:
-                            session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
+                            actual_session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
                         print(f"[DEBUG] [BFS Crawler] Session primed with {len(cookies)} cookies.")
                     for link in new_links:
                         if link not in visited:

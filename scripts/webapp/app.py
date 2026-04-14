@@ -12,7 +12,8 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+import html
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -22,7 +23,7 @@ load_dotenv()
 # Add parent directory to sys.path to import fetch_page
 sys.path.append(str(Path(__file__).parent.parent))
 try:
-    from fetch_page import fetch_page, fetch_robots_txt, fetch_llms_txt
+    from fetch_page import fetch_page, fetch_robots_txt, fetch_llms_txt, DEFAULT_HEADERS
     from citability_scorer import analyze_page_citability
     from brand_scanner import generate_brand_report
 except ImportError as e:
@@ -244,7 +245,6 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                 # Stealth Mode Jitter
                 import time, random
                 time.sleep(random.uniform(0.5, 2.0))
-                
                 print(f"[DEBUG] [{agent_id}] Calling {model_name} (Attempt {attempt+1})...")
                 response = client.messages.create(
                     model=model_name,
@@ -275,25 +275,42 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                     parsed["summary"] = f"🚨 [RESTRICTED DATA]: {parsed.get('restriction_reason')}\n\n{parsed.get('summary', '')}"
 
 
-                # Log Success to Supabase (Rich Persistence)
+                # ── Database Layer Hardening (Tiered Saving) ──────────────────
                 sb = get_supabase()
                 if sb:
+                    # Tier 1: FULL SAVE (Findings, Roadmaps, etc.)
                     try:
                         sb.table("agent_logs").insert({
-                            "audit_id": audit_id, 
-                            "agent_name": agent_id, 
-                            "agent_score": parsed["score"],
-                            "status": parsed["status"], 
-                            "summary": parsed.get("summary"),
-                            "findings": parsed.get("findings", []),
-                            "weaknesses": parsed.get("weaknesses", []),
-                            "suggested_code": parsed.get("suggested_code", []),
-                            "roadmap": parsed.get("roadmap", []),
-                            "tokens_used": tokens_used, 
-                            "error_message": parsed.get("restriction_reason")
+                            "audit_id": audit_id, "agent_name": agent_id, "agent_score": parsed["score"],
+                            "status": parsed["status"], "summary": parsed.get("summary"),
+                            "findings": parsed.get("findings", []), "weaknesses": parsed.get("weaknesses", []),
+                            "suggested_code": parsed.get("suggested_code", []), "roadmap": parsed.get("roadmap", []),
+                            "tokens_used": tokens_used, "error_message": parsed.get("restriction_reason")
                         }).execute()
                     except Exception as e: 
-                        print(f"[DEBUG] Supabase Save Error: {e}")
+                        err_str = str(e)
+                        if "PGRST" in err_str: # Catch any PostgREST column/cache mismatches
+                            print(f"\n[!] ALERT: Supabase Cache Stale or Column Mismatch. Attempting Tier 2 (Legacy Save)...")
+                            try:
+                                # Tier 2: LEGACY SAVE (Minimal operational data)
+                                sb.table("agent_logs").insert({
+                                    "audit_id": audit_id, "agent_name": agent_id, "agent_score": parsed["score"],
+                                    "status": parsed["status"], "summary": parsed.get("summary")
+                                }).execute()
+                                print(f"[+] Tier 2 Save Successful. (Rich metadata omitted)")
+                            except Exception as e2:
+                                print(f"[!] Tier 2 Failed: {e2}. Attempting Tier 3 (Atomic Save)...")
+                                try:
+                                    # Tier 3: ATOMIC SAVE (Just the relation and status)
+                                    # This ensures Foreign Key consistency and UI status visibility
+                                    sb.table("agent_logs").insert({
+                                        "audit_id": audit_id, "agent_name": agent_id, "status": "PARTIAL_SUCCESS"
+                                    }).execute()
+                                    print(f"[+] Tier 3 Atomic Save Successful. System recovered from Schema Lock.")
+                                except Exception as e3:
+                                    print(f"[CRITICAL] Database Lock: Failed all recovery tiers. Primary error: {e}")
+                        else:
+                            print(f"[DEBUG] Supabase Save Error: {err_str}")
 
                 return parsed
 
@@ -719,8 +736,6 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
                         f["evidence_url"] = matching_weakness.get("evidence_url")
                     report_data_pdf["findings"].append(f)
             
-            if r.get("suggested_code"):
-                report_data_pdf["suggested_code"].extend(r["suggested_code"])
         
         generate_report(report_data_pdf, pdf_path)
         
@@ -792,18 +807,92 @@ def analyze_url():
                 new_proj = sb.table("projects").insert({"target_url": domain}).execute()
                 project_id = new_proj.data[0]['id']
 
-            # Insert placeholder audit row to satisfy Foreign Key constraints for agents!
-            sb.table("audits").insert({
-                "id": audit_id,
-                "project_id": project_id,
-                "final_score": 0,
-                "status": "RUNNING",
-                "pdf_url": None,
-                "metrics": {}
-            }).execute()
+            # ── Resilient Audit Placeholder ──────────────────────────
+            try:
+                sb.table("audits").insert({
+                    "id": audit_id, "project_id": project_id, "final_score": 0,
+                    "status": "RUNNING", "pdf_url": None, "metrics": {}
+                }).execute()
+            except Exception as ae:
+                if "PGRST" in str(ae):
+                    print(f"[!] ALERT: Audits Table Schema Stale. Attempting Atomic Placeholder...")
+                    sb.table("audits").insert({
+                        "id": audit_id, "project_id": project_id, "status": "RUNNING"
+                    }).execute()
+                else: 
+                    print(f"[ERROR] Critical Audit Initialization Failure: {ae}")
+                    raise ae
+
+            # --- 5-HOUR CACHE PROTECTION (New) ---
+            print(f"[DEBUG] Checking Cache for Project {project_id}...")
+            # Check last 5 successful audits for this domain
+            cache_res = sb.table("audits").select("id, final_score, metrics, created_at, summary")\
+                .eq("project_id", project_id)\
+                .eq("status", "SUCCESS")\
+                .order("created_at", desc=True)\
+                .limit(5).execute()
+            
+            if cache_res.data:
+                latest = cache_res.data[0]
+                # Ensure created_at is offset-aware even if the string format varies
+                created_at = datetime.fromisoformat(latest["created_at"].replace("Z", "+00:00"))
+                if created_at.tzinfo is None:
+                    created_at = created_at.replace(tzinfo=timezone.utc)
+                
+                # Compare awareness-safe datetimes
+                age = datetime.now(timezone.utc) - created_at
+                
+                if age < timedelta(hours=5):
+                    print(f"[DEBUG] [CACHE HIT] Serving recent audit from {created_at} (Age: {age})")
+                    cached_audit_id = latest["id"]
+                    
+                    # Reconstruct results from agent_logs
+                    logs_res = sb.table("agent_logs").select("*").eq("audit_id", cached_audit_id).execute()
+                    
+                    if logs_res.data:
+                        results = []
+                        for log in logs_res.data:
+                            # Re-map DB columns to the template-friendly 'results' structure
+                            results.append({
+                                "id": log["agent_name"],
+                                "label": AGENT_MAPPING.get(log["agent_name"], {}).get("label", log["agent_name"]),
+                                "score": log["agent_score"],
+                                "summary": log["summary"],
+                                "findings": log["findings"],
+                                "weaknesses": log["weaknesses"],
+                                "suggested_code": log["suggested_code"],
+                                "roadmap": log["roadmap"],
+                                "status": log["status"],
+                                "weight": AGENT_MAPPING.get(log["agent_name"], {}).get("weight", 0.2)
+                            })
+                        
+                        # Reconstruct master metrics
+                        final_score = latest["final_score"]
+                        metrics = latest["metrics"]
+                        predicted_score = min(99, final_score + 12)
+                        meta_insight = latest.get("summary") or results[-1]["summary"] # Fallback
+                        roadmap_fixes = next((r["roadmap"] for r in results if r["id"] == "geo-executive-roadmap"), [])
+                        task_id = cached_audit_id # Ensure PDF / UI links work
+                        
+                        grad_map = [(90, "A+", "Excellent"), (80, "A", "Good"), (60, "B", "Moderate"), (40, "C", "Poor"), (0, "F", "Critical")]
+                        grade, label = next((g, l) for s, g, l in grad_map if final_score >= s)
+                        
+                        missing_analysis = [
+                            "Historical Backlink Velocity Trends (Requires Ahrefs/Semrush API Integration)",
+                            "Real-time Sentiment Analysis in Gated AI Communities (X, Discord, Slack)",
+                            "Competitive Share-of-Voice (Requires per-query serpapi monitoring)"
+                        ]
+
+                        return render_template(
+                            "_analysis_result.html",
+                            url=url, score=final_score, predicted_score=predicted_score, grade=grade,
+                            label=label, results=results, task_id=task_id, formula=FORMULA_TEXT,
+                            metrics=metrics, meta_insight=meta_insight, roadmap_fixes=roadmap_fixes,
+                            missing_analysis=missing_analysis
+                        )
 
         except Exception as e:
-            print(f"Supabase Project DB Error: {e}")
+            print(f"Supabase Cache/DB Error: {e}")
     
     # ── 1. Elite Enterprise Stratified Audit (10,000 URLs) ────────────
     visited = {url.split("#")[0].rstrip("/")}
@@ -936,7 +1025,11 @@ def analyze_url():
             ))
             for r in results_crawl:
                 if not r: continue
-                if r.get("status_code", 0) >= 400: metrics["broken_links"] += 1
+                if r.get("status_code", 0) >= 400: 
+                    metrics["broken_links"] += 1
+                    if "diagnostics" not in metrics: metrics["diagnostics"] = []
+                    metrics["diagnostics"].append({"url": r["url"], "status": r["status_code"], "error": ", ".join(r.get("errors", [])) or "Resource Blocked"})
+                
                 if not r.get("errors"):
                     content_bundle["internal_pages"].append({
                         "url": r["url"],
@@ -955,6 +1048,14 @@ def analyze_url():
                     })
                     metrics["schema_types"].update([s.get("@type") for s in r.get("structured_data", []) if isinstance(s, dict)])
         
+        # Logic to extract diagnostics from errors even if they didn't return a 400 (e.g. timeouts/pivots)
+        for r in results_crawl:
+            if r.get("errors"):
+                if "diagnostics" not in metrics: metrics["diagnostics"] = []
+                # Only add if not already added by 400 check
+                if not any(d["url"] == r["url"] for d in metrics["diagnostics"]):
+                    metrics["diagnostics"].append({"url": r["url"], "status": r.get("status_code", "ERR"), "error": ", ".join(r["errors"])})
+
         # Calculate Advanced Aggregate Metrics for UI
         if content_bundle["internal_pages"]:
             audited_pages = content_bundle["internal_pages"]
@@ -1010,8 +1111,14 @@ def analyze_url():
     master_result = run_agent("geo-executive-roadmap", url, content_bundle, api_key, audit_id)
     
     # ── 4. High-Standard Meta-Analysis (Final Synthesis) ──────────────
-    # We use the Strategist's Global Score as the final authority (Self-Healing Intelligence)
-    final_score = master_result.get("score", round(sum(r.get("score", 0) * r.get("weight", 0) for r in results)))
+    # Source of Truth calculation: Weighted average of specialized audits
+    specialist_avg = round(sum(r.get("score", 0) * r.get("weight", 0) for r in results))
+    
+    # We use the Strategist's Global Score as the primary authority, 
+    # but FALLBACK to specialist_avg if the master returned 0 (failsafe against blockade hallucinations)
+    master_score = master_result.get("score", 0)
+    final_score = master_score if master_score > 0 else specialist_avg
+    
     predicted_score = min(99, final_score + 12) 
     
     meta_insight = master_result.get("summary", "Analysis complete.")
@@ -1038,6 +1145,7 @@ def analyze_url():
             sb.table("audits").update({
                 "final_score": final_score,
                 "status": "SUCCESS",
+                "summary": meta_insight,
                 "pdf_url": generated_pdf_url,
                 "metrics": metrics
             }).eq("id", audit_id).execute()

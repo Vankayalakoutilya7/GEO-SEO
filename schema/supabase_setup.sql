@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS audits (
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
     final_score INTEGER DEFAULT 0,
     status TEXT DEFAULT 'RUNNING',
+    summary TEXT,
     pdf_url TEXT,
     metrics JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

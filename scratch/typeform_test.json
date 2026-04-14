@@ -1,0 +1,1875 @@
+{
+  "url": "https://typeform.com",
+  "status_code": 200,
+  "redirect_chain": [
+    {
+      "url": "https://typeform.com/",
+      "status": 301
+    }
+  ],
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Date": "Tue, 14 Apr 2026 10:21:44 GMT",
+    "x-lambda-id": "2278df97-e176-41f7-b4e5-545392ae022d",
+    "x-wf-region": "us-east-1",
+    "Set-Cookie": "_cfuvid=mbeDEYkVfJwCi2tqRLrfuuM1PHYkNYbttdt0wMhE36k-1776162104.8737538-1.0.1.1-pVT93EH0pQmZ6hNphhLoqLU5crRfUjZQ4A6lZ97rZmE; HttpOnly; SameSite=None; Secure; Path=/; Domain=webflow-prod.typeform.com",
+    "CF-Ray": "9ec1fc437b8c2035-SIN",
+    "CF-Cache-Status": "HIT",
+    "Last-Modified": "Fri, 10 Apr 2026 15:03:19 GMT",
+    "Server": "cloudflare",
+    "surrogate-control": "max-age=432000",
+    "surrogate-key": "webflow-prod.typeform.com 66ffe2174aa8e8d5661c2708 pageId:66ffe2174aa8e8d5661c2710 6733265c7bf7fb3f16730e02 67288c73d0b8fb12bb297551 6724bbbdd6950254f66255e6",
+    "Vary": "Accept-Encoding",
+    "X-Cache": "Miss from cloudfront",
+    "Via": "1.1 eed2a4e376308312c700045e98e81a5e.cloudfront.net (CloudFront)",
+    "X-Amz-Cf-Pop": "HYD57-P7",
+    "Alt-Svc": "h3=\":443\"; ma=86400",
+    "X-Amz-Cf-Id": "8Iqv6Hm_O2CsXLu1IkiyE-_yRtpt1Xg_4FgyF75r1OnCk3qUpdzKuA==",
+    "Age": "39904"
+  },
+  "meta_tags": {
+    "description": "Build beautiful, interactive forms \u2014 get more responses. No coding needed. Templates for quizzes, research, feedback, lead generation, and more. Sign up FREE.",
+    "og:title": "Typeform: People-Friendly Forms and Surveys",
+    "og:description": "Build beautiful, interactive forms \u2014 get more responses. No coding needed. Templates for quizzes, research, feedback, lead generation, and more. Sign up FREE.",
+    "og:image": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/6889ccfec828e151ddd96537_ogimage.png",
+    "twitter:title": "Typeform: People-Friendly Forms and Surveys",
+    "twitter:description": "Build beautiful, interactive forms \u2014 get more responses. No coding needed. Templates for quizzes, research, feedback, lead generation, and more. Sign up FREE.",
+    "og:type": "website",
+    "twitter:card": "summary_large_image",
+    "viewport": "width=device-width, initial-scale=1",
+    "generator": "Webflow",
+    "algolia-site-verification": "3642D9261A91D018",
+    "google-site-verification": "gKcTtMRGegM3RaMbL_WDS_6JjDAxo6YreHF5_Z1LatI"
+  },
+  "title": "Typeform: People-Friendly Forms and Surveys",
+  "description": "Build beautiful, interactive forms \u2014 get more responses. No coding needed. Templates for quizzes, research, feedback, lead generation, and more. Sign up FREE.",
+  "canonical": "https://www.typeform.com",
+  "h1_tags": [
+    "Build forms at the drop of a prompt"
+  ],
+  "heading_structure": [
+    {
+      "level": 1,
+      "text": "Build forms at the drop of a prompt"
+    },
+    {
+      "level": 2,
+      "text": "Trusted by 95% of the Fortune 500"
+    },
+    {
+      "level": 2,
+      "text": "The form is only the beginning"
+    },
+    {
+      "level": 2,
+      "text": "Get 3.5x more data with a form expert"
+    },
+    {
+      "level": 2,
+      "text": "Trigger action that brings in customers"
+    },
+    {
+      "level": 2,
+      "text": "Connect with hundreds of your business-critical tools"
+    },
+    {
+      "level": 2,
+      "text": "Why Typeform?"
+    },
+    {
+      "level": 3,
+      "text": "Platform"
+    },
+    {
+      "level": 3,
+      "text": "Tools"
+    },
+    {
+      "level": 3,
+      "text": "TEMPLATES"
+    },
+    {
+      "level": 3,
+      "text": "What's new"
+    },
+    {
+      "level": 3,
+      "text": "TEAMS"
+    },
+    {
+      "level": 3,
+      "text": "USE CASES"
+    },
+    {
+      "level": 3,
+      "text": "Plans"
+    },
+    {
+      "level": 3,
+      "text": "SUPPORT"
+    },
+    {
+      "level": 3,
+      "text": "COMPANY"
+    },
+    {
+      "level": 3,
+      "text": "BLOG"
+    },
+    {
+      "level": 3,
+      "text": "96%"
+    },
+    {
+      "level": 3,
+      "text": "95%"
+    },
+    {
+      "level": 3,
+      "text": "87%"
+    },
+    {
+      "level": 3,
+      "text": "PRODUCT"
+    },
+    {
+      "level": 3,
+      "text": "Templates"
+    },
+    {
+      "level": 3,
+      "text": "Integrations"
+    },
+    {
+      "level": 3,
+      "text": "Resources"
+    },
+    {
+      "level": 3,
+      "text": "Get to know us"
+    }
+  ],
+  "word_count": 181,
+  "text_content": "Typeform: People-Friendly Forms and Surveys Skip to main content Don't just collect leads\u2014close them. Learn more about Typeform for Growth. AI ENGAGEMENT PLATFORM Build forms at the drop of a prompt Put a seasoned form expert to work with Typeform AI. It structures and designs at your command. Just type to build and edit. Get started\u2014it's free Trusted by 95% of the Fortune 500 The form is only the beginning DATA COLLECTION Get 3.5x more data with a form expert Backed by over a decade of experience, Typeform AI helps you build expertly-designed, best-practice forms proven to get more responses. Get started\u2014it's free NEW:\u00a0CONTACTS & AUTOMATIONS Trigger action that brings in customers Collect and then act on customer contact data. As new data arrives it triggers automatic segmentation and follow-up emails, so you can convert faster than ever. See add-on Integrations Connect with hundreds of your business-critical tools See all integrations Why Typeform? After switching to Typeform, our customers agree: 96% have a better brand experience 95% gather more data, more easily 87% reveal deeper data insights Get started\u2014it's free",
+  "internal_links": [
+    {
+      "url": "https://typeform.com",
+      "text": "Skip to main content"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "Typeform Icon"
+    },
+    {
+      "url": "https://typeform.com/platform-overview",
+      "text": "Platform overviewWhat is Typeform?"
+    },
+    {
+      "url": "https://typeform.com/ai",
+      "text": "Typeform AIYour AI know-pilot"
+    },
+    {
+      "url": "https://typeform.com/contacts-and-automations",
+      "text": "Contacts &\u00a0AutomationsAutomated workflows to grow your business"
+    },
+    {
+      "url": "https://typeform.com/video",
+      "text": "Video engagementInteractive video forms"
+    },
+    {
+      "url": "https://typeform.com/reporting",
+      "text": "Analytics and reportingAnswers you can act on"
+    },
+    {
+      "url": "https://typeform.com/connect",
+      "text": "IntegrationsConnect all your apps"
+    },
+    {
+      "url": "https://typeform.com/admin-security",
+      "text": "Admin and securityEnterprise-grade data protection"
+    },
+    {
+      "url": "https://typeform.com/feature-glossary",
+      "text": "Feature glossaryDiscover Typeform\u2019s full potential"
+    },
+    {
+      "url": "https://typeform.com/forms",
+      "text": "Form builder"
+    },
+    {
+      "url": "https://typeform.com/surveys",
+      "text": "Survey maker"
+    },
+    {
+      "url": "https://typeform.com/quizzes",
+      "text": "Quiz maker"
+    },
+    {
+      "url": "https://typeform.com/test-maker",
+      "text": "Test maker"
+    },
+    {
+      "url": "https://typeform.com/poll-builder",
+      "text": "Poll builder"
+    },
+    {
+      "url": "https://typeform.com/application-form-builder",
+      "text": "Application form builder"
+    },
+    {
+      "url": "https://typeform.com/landing-page-builder",
+      "text": "Landing page builder"
+    },
+    {
+      "url": "https://typeform.com/nps-form-builder",
+      "text": "NPS form builder"
+    },
+    {
+      "url": "https://typeform.com/registration-form-builder",
+      "text": "Registration form builder"
+    },
+    {
+      "url": "https://typeform.com/short-form-builder",
+      "text": "Short form builder"
+    },
+    {
+      "url": "https://typeform.com/templates",
+      "text": "Choose one \u2192"
+    },
+    {
+      "url": "https://typeform.com/templates",
+      "text": ""
+    },
+    {
+      "url": "https://typeform.com/roles/b2b-marketing",
+      "text": "MarketingFor B2B and B2C marketing"
+    },
+    {
+      "url": "https://typeform.com/templates-category/product",
+      "text": "ProductFor product, UX, and research"
+    },
+    {
+      "url": "https://typeform.com/roles/hr",
+      "text": "Human resourcesFor HR, ops, and talent"
+    },
+    {
+      "url": "https://typeform.com/templates-category/customer-success",
+      "text": "Customer successFor CS and education"
+    },
+    {
+      "url": "https://typeform.com/use-case-gallery",
+      "text": "View all use cases \u2192"
+    },
+    {
+      "url": "https://typeform.com/pricing",
+      "text": "CorePlans for everyone"
+    },
+    {
+      "url": "https://typeform.com/growth",
+      "text": "GrowthPlans for GTM teams"
+    },
+    {
+      "url": "https://typeform.com/enterprise",
+      "text": "EnterprisePlans for larger orgs"
+    },
+    {
+      "url": "https://typeform.com/partners",
+      "text": "PartnersBrowse or join"
+    },
+    {
+      "url": "https://typeform.com/careers",
+      "text": "CareersJoin our team"
+    },
+    {
+      "url": "https://typeform.com/webinars",
+      "text": "WebinarsLearn and get inspired"
+    },
+    {
+      "url": "https://typeform.com/blog",
+      "text": "Browse blog \u2192"
+    },
+    {
+      "url": "https://typeform.com/blog",
+      "text": ""
+    },
+    {
+      "url": "https://typeform.com/enterprise",
+      "text": "Enterprise"
+    },
+    {
+      "url": "https://typeform.com/pricing",
+      "text": "Pricing"
+    },
+    {
+      "url": "https://typeform.com/signup",
+      "text": "Get started\u2014it's free"
+    },
+    {
+      "url": "https://typeform.com/contacts-and-automations",
+      "text": "See add-on"
+    },
+    {
+      "url": "https://typeform.com/connect",
+      "text": "See all integrations"
+    },
+    {
+      "url": "https://typeform.com/signup",
+      "text": "Get started\u2014it's free"
+    },
+    {
+      "url": "https://typeform.com/pricing",
+      "text": "Pricing"
+    },
+    {
+      "url": "https://typeform.com/enterprise",
+      "text": "Enterprise Overview"
+    },
+    {
+      "url": "https://typeform.com/enterprise/healthcare",
+      "text": "Healthcare"
+    },
+    {
+      "url": "https://typeform.com/templates/interactive-fiction",
+      "text": "Interactive story template"
+    },
+    {
+      "url": "https://typeform.com/templates/trivia",
+      "text": "Trivia quiz"
+    },
+    {
+      "url": "https://typeform.com/templates/employee-job-application",
+      "text": "Job application form"
+    },
+    {
+      "url": "https://typeform.com/templates/event-registration",
+      "text": "Event registration form"
+    },
+    {
+      "url": "https://typeform.com/templates/nps-survey-template",
+      "text": "NPS survey"
+    },
+    {
+      "url": "https://typeform.com/templates/photo-upload-form-template",
+      "text": "Photo upload form"
+    },
+    {
+      "url": "https://typeform.com/templates/customer-satisfaction",
+      "text": "Customer satisfaction form"
+    },
+    {
+      "url": "https://typeform.com/templates/website-questionnaire-template",
+      "text": "Website questionnaire template"
+    },
+    {
+      "url": "https://typeform.com/templates/beta-product-feedback-survey-template",
+      "text": "Beta product feedback survey"
+    },
+    {
+      "url": "https://typeform.com/templates/pre-order-form-template",
+      "text": "Pre-order form template"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/lead-generation-forms",
+      "text": "Lead gen forms"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/lead-generation-quizzes",
+      "text": "Lead gen quizzes"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/registration",
+      "text": "Registration forms"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/customer-success-forms",
+      "text": "Customer success forms"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/file-upload",
+      "text": "File upload forms"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/job-application",
+      "text": "Job application forms"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/application",
+      "text": "Application forms"
+    },
+    {
+      "url": "https://typeform.com/templates-sub-category/event-forms",
+      "text": "Event forms"
+    },
+    {
+      "url": "https://typeform.com/templates-category/education",
+      "text": "Educational templates"
+    },
+    {
+      "url": "https://typeform.com/connect/slack",
+      "text": "Slack integration"
+    },
+    {
+      "url": "https://typeform.com/connect/mailchimp",
+      "text": "Mailchimp integration"
+    },
+    {
+      "url": "https://typeform.com/connect/klaviyo",
+      "text": "Klaviyo integration"
+    },
+    {
+      "url": "https://typeform.com/connect/wordpress",
+      "text": "Wordpress integration"
+    },
+    {
+      "url": "https://typeform.com/connect/pipedrive",
+      "text": "Pipedrive integration"
+    },
+    {
+      "url": "https://typeform.com/connect/google-calendar",
+      "text": "Google Calendar integration"
+    },
+    {
+      "url": "https://typeform.com/connect/zoho-crm",
+      "text": "Zoho integration"
+    },
+    {
+      "url": "https://typeform.com/connect/office-365",
+      "text": "Office 365 integration"
+    },
+    {
+      "url": "https://typeform.com/connect/zendesk",
+      "text": "Zendesk integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/analytics-reporting",
+      "text": "Analytics reporting integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/sales-and-crm",
+      "text": "Sales and CRM Integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/payments",
+      "text": "Payments integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/scheduling",
+      "text": "Scheduling integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/email-marketing",
+      "text": "Email marketing integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/customer-support",
+      "text": "Customer Support integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/automation",
+      "text": "Automation integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/documents",
+      "text": "Documents integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/rewards",
+      "text": "Rewards integration"
+    },
+    {
+      "url": "https://typeform.com/connect-category/collaboration",
+      "text": "Collaboration integration"
+    },
+    {
+      "url": "https://typeform.com/blog",
+      "text": "Blog"
+    },
+    {
+      "url": "https://typeform.com/blog/typeform-vs-jotform",
+      "text": "Typeform vs Jotform"
+    },
+    {
+      "url": "https://typeform.com/blog/typeform-vs-formstack",
+      "text": "Typeform vs Formstack"
+    },
+    {
+      "url": "https://typeform.com/refer-a-friend",
+      "text": "Referral program"
+    },
+    {
+      "url": "https://typeform.com/partners/agencies",
+      "text": "Agency"
+    },
+    {
+      "url": "https://typeform.com/partners/technology",
+      "text": "Technology"
+    },
+    {
+      "url": "https://typeform.com/about-us",
+      "text": "About us"
+    },
+    {
+      "url": "https://typeform.com/brand",
+      "text": "Brand"
+    },
+    {
+      "url": "https://typeform.com/careers",
+      "text": "Careers"
+    },
+    {
+      "url": "https://typeform.com/es",
+      "text": "Typeform\u00a0(es)"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "Cookie Settings"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "Check our cookies policy to delete cookies"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "Report abuse"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "Enterprise Overview"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "Healthcare"
+    },
+    {
+      "url": "https://typeform.com",
+      "text": "English"
+    },
+    {
+      "url": "https://typeform.com/es",
+      "text": "Espa\u00f1ol"
+    },
+    {
+      "url": "https://typeform.com/fr",
+      "text": "Fran\u00e7ais"
+    }
+  ],
+  "external_links": [
+    {
+      "url": "https://www.typeform.com/growth?utm_source=site&utm_medium=site_banner&utm_campaign=tf4g",
+      "text": "Learn more about Typeform for Growth."
+    },
+    {
+      "url": "https://www.typeform.com/whats-new",
+      "text": "See what's new \u2192"
+    },
+    {
+      "url": "https://www.typeform.com/whats-new",
+      "text": ""
+    },
+    {
+      "url": "https://www.typeform.com/use-case/lead-generation",
+      "text": "Lead generation"
+    },
+    {
+      "url": "https://www.typeform.com/use-case/employee-onboarding",
+      "text": "Employee onboarding"
+    },
+    {
+      "url": "https://www.typeform.com/use-case/employee-satisfaction",
+      "text": "Employee satisfaction"
+    },
+    {
+      "url": "https://www.typeform.com/use-case/employee-engagement",
+      "text": "Employee engagement"
+    },
+    {
+      "url": "https://www.typeform.com/use-case/customer-feedback",
+      "text": "Customer feedback"
+    },
+    {
+      "url": "https://www.typeform.com/pricing/talent",
+      "text": "TalentPlans for HR and people teams"
+    },
+    {
+      "url": "https://help.typeform.com/hc/en-us",
+      "text": "Help centerFind quick answers"
+    },
+    {
+      "url": "https://community.typeform.com",
+      "text": "CommunityShare and interact"
+    },
+    {
+      "url": "https://help.typeform.com/hc/en-us/requests/new",
+      "text": "Contact usSpeak to our team"
+    },
+    {
+      "url": "https://admin.typeform.com/login",
+      "text": "Log in"
+    },
+    {
+      "url": "https://admin.typeform.com/signup",
+      "text": "Sign up"
+    },
+    {
+      "url": "https://admin.typeform.com",
+      "text": "My forms"
+    },
+    {
+      "url": "https://admin.typeform.com/?cello-open=true",
+      "text": "Refer friends, get referrals"
+    },
+    {
+      "url": "https://admin.typeform.com/login/logout",
+      "text": "Log out"
+    },
+    {
+      "url": "https://admin.typeform.com/signup",
+      "text": "Sign up"
+    },
+    {
+      "url": "https://admin.typeform.com/signup",
+      "text": "Get started\u2014it's free"
+    },
+    {
+      "url": "https://help.typeform.com/hc/en-us",
+      "text": "Help\u00a0center"
+    },
+    {
+      "url": "https://community.typeform.com",
+      "text": "Community"
+    },
+    {
+      "url": "https://help.typeform.com/hc/en-us/categories/33840731976596-Videos",
+      "text": "Tutorials"
+    },
+    {
+      "url": "https://help.typeform.com/hc/en-us/articles/360029423551-FAQ",
+      "text": "FAQs"
+    },
+    {
+      "url": "https://www.typeform.com/agencies",
+      "text": "Agency directory"
+    },
+    {
+      "url": "https://www.typeform.com/partners/startups",
+      "text": "Startups"
+    },
+    {
+      "url": "https://status.typeform.com",
+      "text": "System\u00a0status"
+    },
+    {
+      "url": "https://www.typeform.com/developers",
+      "text": "Developers / API"
+    },
+    {
+      "url": "https://tfsales.typeform.com/to/PxcVKQGb?source=Website&source2=Contact%20Us",
+      "text": "Contact\u00a0sales"
+    },
+    {
+      "url": "https://admin.typeform.com/to/dwk6gt",
+      "text": "Terms and conditions"
+    },
+    {
+      "url": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/67b5dbcff2e8496a1c95e323_NFIR%20English%20Final%2022.03.24.pdf",
+      "text": "NFIR 2023"
+    },
+    {
+      "url": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/687e62a85098ca5ee978e90c_NFIR%202024.pdf",
+      "text": "NFIR 2024"
+    },
+    {
+      "url": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/673e4e698e1c13bd2479d6a2_2024-modern-slavery-statement-en.pdf",
+      "text": "Modern slavery statement"
+    },
+    {
+      "url": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/67acb3af2f60d1b3864acedc_Typeform%20-%20Transparency%20Report%202024.pdf",
+      "text": "Transparency report"
+    },
+    {
+      "url": "https://tfproductops.typeform.com/to/f9ErlyGj",
+      "text": "Newsletter"
+    },
+    {
+      "url": "https://www.facebook.com/typeform",
+      "text": "Facebook"
+    },
+    {
+      "url": "https://www.twitter.com/typeform",
+      "text": "Twitter/X"
+    },
+    {
+      "url": "https://www.instagram.com/typeform",
+      "text": "Instagram"
+    },
+    {
+      "url": "https://www.youtube.com/channel/UC2nRv6J0FsJVePJTLhUDKgg",
+      "text": "YouTube"
+    },
+    {
+      "url": "https://www.linkedin.com/company/typeform-com",
+      "text": "LinkedIn"
+    },
+    {
+      "url": "https://admin.typeform.com/to/dwk6gt",
+      "text": "Check our cookies policy to delete cookies"
+    },
+    {
+      "url": "https://www.typeform.com/help/a/report-abuse-360034113252",
+      "text": "Report abuse"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/68f74c3ba5608fe77ace6f35_Frame%201982251279.png",
+      "alt": "Serum bottle with AI chat prompt to create a product recommendation quiz on dark purple background",
+      "width": null,
+      "height": null,
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6728923eb22e7ee7c15e8396_calendly.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6728910a1c16455593c27afa_citizen_m%201.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890fcdec577bb01f7b5f8_loccitane.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890ec4a4f53e7ce97a439_wetransfer.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890d44ff06c03b9169b96_slack.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890ca58ffc8edfb664691_webflow.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890be48319096ffeb6bfe_zapier.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890b1d5a69d1620412cf7_barrys.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/672890a3d27752eaed89aa47_hubspot.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/67289096a54485774b102f83_hermes.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708%2F68f8d2d30bac28d72d6404bc_Section%201-poster-00001.jpg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": null
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708%2F68f8d2d9721a05f1acf374da_Section%202-poster-00001.jpg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": null
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "30",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": null,
+      "height": null,
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "eager"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1c86d36244841815048_zapierdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1cd27a34b18f08a6ebe_zapierlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b173d10e0295e5ffbf02_webflowdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b179c16aaedc568a76c6_webflowlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0305902567017b1cb89b_stripedark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0308c3afe7b2e2126521_stripelight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1bd903b3aa363dc3917_slackdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b1b9d3f6ec6e706f976e_slacklight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02795d666769d55c9451_klayviyodark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0276903618d39169da00_klaviyolight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02ecc4952b0831340301_intercomdark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a02c47f253faed3b8b600_intercomlight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01eab77805c8a4046aaa_callraildark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a01ed903618d391695aea_callraillight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b203cb3f5157ce55f682_calendlydark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/6740b2088ccd9b57fca640e1_calendlylight.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a023dbd1531d1328a466c_activecampaigndark.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    },
+    {
+      "src": "https://cdn.prod.website-files.com/6718da5ecf694c9af0e8d5d7/674a0255573085768e439eee_activecampaignlgiht.svg",
+      "alt": "",
+      "width": "100",
+      "height": "50",
+      "loading": "lazy"
+    }
+  ],
+  "structured_data": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Typeform",
+      "url": "https://www.typeform.com",
+      "logo": "https://cdn.prod.website-files.com/66ffe2174aa8e8d5661c2708/6889ccfec828e151ddd96537_ogimage.png",
+      "sameAs": [
+        "https://www.linkedin.com/company/typeform-/",
+        "https://www.facebook.com/typeform/",
+        "https://www.twitter.com/typeform/",
+        "https://www.instagram.com/typeform/",
+        "https://www.youtube.com/channel/UC2nRv6J0FsJVePJTLhUDKgg/"
+      ],
+      "description": "Build beautiful, interactive forms \u2014 get more responses. No coding needed. Templates for quizzes, research, feedback, lead generation, and more. Sign up FREE.",
+      "foundingDate": "2012",
+      "founder": [
+        {
+          "@type": "Person",
+          "name": "Robert Mu\u00f1oz",
+          "url": "https://www.linkedin.com/in/robertmunoztypeform"
+        },
+        {
+          "@type": "Person",
+          "name": "David Okuniev",
+          "url": "https://www.linkedin.com/in/david-okuniev-a845b66/"
+        }
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "ES",
+        "addressLocality": "Barcelona",
+        "postalCode": "08017",
+        "streetAddress": "Carrer de Can Rabia 3 - 5, 4th floor"
+      }
+    }
+  ],
+  "has_ssr_content": true,
+  "security_headers": {
+    "Strict-Transport-Security": null,
+    "Content-Security-Policy": null,
+    "X-Frame-Options": null,
+    "X-Content-Type-Options": null,
+    "Referrer-Policy": null,
+    "Permissions-Policy": null
+  },
+  "page_weight_kb": 229.34,
+  "is_compressed": false,
+  "ttfb_ms": 347,
+  "errors": []
+}

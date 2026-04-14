@@ -32,10 +32,11 @@
         </div>
       </div>
       <div class="col-md-3">
-        <div class="kpi-card p-4 text-center tooltip-trigger" data-bs-toggle="tooltip" title="Analysis covering: {{ metrics.schema_types | join(', ') }}">
-          <div class="small text-muted text-uppercase mb-2">Snippet Coverage</div>
-          <div class="h3 text-white fw-bold">{{ metrics.snippet_coverage }}%</div>
-          <div class="progress mt-2" style="height: 4px"><div class="progress-bar bg-success" id="snippet-progress" style="width: 0%"></div></div>
+        <div class="kpi-card p-4 text-center">
+          <div class="small text-muted text-uppercase mb-2">Engine Response</div>
+          <div class="h3 text-white fw-bold">{{ metrics.avg_ttfb }} <span class="small opacity-50">MS</span></div>
+          <div class="progress mt-2" style="height: 4px"><div class="progress-bar bg-success" id="ttfb-progress" style="width: 0%"></div></div>
+          <div class="small opacity-50 mt-1" style="font-size: 0.7rem">Target: < 200ms</div>
         </div>
       </div>
       <div class="col-md-3">
@@ -53,7 +54,7 @@
     // Safe progress bar population to avoid CSS lint issues
     document.getElementById('faq-progress').style.width = '{{ (metrics.faq_count * 10) | round }}%';
     document.getElementById('answer-progress').style.width = '{{ (metrics.answer_blocks * 20) | round }}%';
-    document.getElementById('snippet-progress').style.width = '{{ metrics.snippet_coverage }}%';
+    document.getElementById('ttfb-progress').style.width = '{{ [100, (200000 / (metrics.avg_ttfb|default(200, true) + 1))] | min | round }}%';
     
     // Initialize Bootstrap tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -75,9 +76,14 @@
         <i class="bi bi-calculator me-1"></i> {{ formula }}
       </div>
 
-      <div class="mt-4 p-3 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10 text-start">
+      <div class="mt-4 p-3 bg-black rounded-4 border border-white border-opacity-10 text-start">
         <div class="small text-muted text-uppercase mb-2 text-primary fw-bold" style="letter-spacing: 0.05em">Industrial Audit Conclusion</div>
-        <div class="text-white fst-italic small" style="line-height: 1.6">{{ meta_insight }}</div>
+        <div id="conclusion-text" class="text-white fst-italic small" style="line-height: 1.6; max-height: 4.8em; overflow: hidden; transition: max-height 0.3s ease-out;">
+          {{ meta_insight }}
+        </div>
+        <button id="conclusion-toggle" class="btn btn-link btn-sm text-primary p-0 mt-2 text-decoration-none" onclick="toggleConclusion()">
+          <i class="bi bi-plus-circle me-1"></i> READ MORE
+        </button>
       </div>
       
       <div class="mt-5 p-3 rounded-4 bg-success bg-opacity-5 border border-success border-opacity-10">
@@ -120,42 +126,6 @@
   </div>
 
 
-  <!-- Advanced Technical Core Vitals (Context Slicing v5.1) -->
-  <div class="col-12 mt-4 mb-2">
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="kpi-card p-3 d-flex align-items-center gap-3">
-           <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary"><i class="bi bi-file-zip h4 mb-0"></i></div>
-           <div>
-             <div class="small text-muted text-uppercase" style="font-size: 0.65rem">Server Optimization</div>
-             <div class="h5 mb-0 text-white fw-bold">Compression: 
-               {% if metrics.compression_status %}<span class="text-success">Brotli/Gzip</span>{% else %}<span class="text-warning">None Detected</span>{% endif %}
-             </div>
-           </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="kpi-card p-3 d-flex align-items-center gap-3">
-           <div class="rounded-circle bg-info bg-opacity-10 p-3 text-info"><i class="bi bi-arrow-repeat h4 mb-0"></i></div>
-           <div>
-             <div class="small text-muted text-uppercase" style="font-size: 0.65rem">Ingestion Health</div>
-             <div class="h5 mb-0 text-white fw-bold">Redirects: 
-               {% if metrics.redirect_hops == 0 %}<span class="text-success">Clean (0 Hops)</span>{% else %}<span class="text-warning">{{ metrics.redirect_hops }} Hops</span>{% endif %}
-             </div>
-           </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="kpi-card p-3 d-flex align-items-center gap-3">
-           <div class="rounded-circle bg-success bg-opacity-10 p-3 text-success"><i class="bi bi-lightning-charge h4 mb-0"></i></div>
-           <div>
-             <div class="small text-muted text-uppercase" style="font-size: 0.65rem">Engine Response</div>
-             <div class="h5 mb-0 text-white fw-bold">Avg TTFB: <span class="text-white">{{ metrics.avg_ttfb }}ms</span></div>
-           </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div class="col-12 mt-5">
     <div class="kpi-card p-5 border-primary border-opacity-10 glow-primary">
@@ -194,19 +164,8 @@
                <i class="bi bi-circle-fill text-{{ res.score | score_tier }}" style="font-size: 0.6rem"></i>
                <h5 class="mb-0 text-white fw-bold">{{ res.label }} ({{ res.score }}%)</h5>
              </div>
-             {% if res.suggested_code %}
-             <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="toggleCode('code-{{ loop.index }}')">
-               <i class="bi bi-code-slash me-1"></i> VIEW CODE
-             </button>
-             {% endif %}
-          </div>
+             </div>
 
-          <div id="code-{{ loop.index }}" class="code-viewer mb-4 d-none">
-            {% for snippet in res.suggested_code %}
-              <div class="small text-info mb-2 mt-3 fw-bold">// Suggested FIX: {{ snippet.file_name }}</div>
-              <pre class="p-3 bg-dark rounded-3 border border-info border-opacity-25" style="font-size: 0.75rem; color: #7de3ff;"><code>{{ snippet.code }}</code></pre>
-            {% endfor %}
-          </div>
 
           <ul class="list-unstyled">
             {% if res.findings %}
@@ -263,7 +222,45 @@
         </div>
       </div>
     </div>
+  {% if metrics.diagnostics %}
+  <div class="col-12 mt-5">
+    <div class="kpi-card p-5 border-danger border-opacity-10">
+      <h3 class="text-white h5 fw-bold mb-4">
+        <i class="bi bi-bug-fill me-2 text-danger"></i> Crawl Diagnostics & Error Log
+      </h3>
+      <div class="table-responsive">
+        <table class="table table-dark table-hover small mb-0 border-transparent">
+          <thead>
+            <tr class="text-muted" style="font-size: 0.7rem">
+              <th>TARGET URL</th>
+              <th width="100">STATUS</th>
+              <th>ERROR MESSAGE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for diag in metrics.diagnostics %}
+            <tr>
+              <td class="text-truncate" style="max-width: 300px">{{ diag.url }}</td>
+              <td>
+                <span class="badge bg-{{ 'danger' if diag.status|string == 'ERR' or diag.status|int >= 400 else 'warning' }} bg-opacity-10 text-{{ 'danger' if diag.status|string == 'ERR' or diag.status|int >= 400 else 'warning' }}">
+                  {{ diag.status }}
+                </span>
+              </td>
+              <td class="text-muted">{{ diag.error }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-4 p-3 rounded-3 bg-danger bg-opacity-5 border border-danger border-opacity-10">
+        <div class="small text-danger d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle-fill"></i>
+          These errors indicate technical barriers that prevented the agents from performing a full on-page verification.
+        </div>
+      </div>
+    </div>
   </div>
+  {% endif %}
 </div>
 
 <script>
@@ -271,6 +268,21 @@
     const el = document.getElementById(id);
     el.classList.toggle('d-none');
   }
+
+  function toggleConclusion() {
+    const text = document.getElementById('conclusion-text');
+    const btn = document.getElementById('conclusion-toggle');
+    if (text.style.maxHeight === '4.8em') {
+      text.style.maxHeight = '2000px';
+      btn.innerHTML = '<i class="bi bi-dash-circle me-1"></i> READ LESS';
+    } else {
+      text.style.maxHeight = '4.8em';
+      btn.innerHTML = '<i class="bi bi-plus-circle me-1"></i> READ MORE';
+    }
+  }
+
+  // Set initial state
+  document.getElementById('conclusion-text').style.maxHeight = '4.8em';
 </script>
 
 <style>
