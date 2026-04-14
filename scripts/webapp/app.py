@@ -59,6 +59,60 @@ AGENT_MAPPING = {
     "geo-echo": {"label": "Unique Value (Echo Penalty)", "weight": 0.0},
     "geo-executive-roadmap": {"label": "Executive Strategic Roadmap", "weight": 0.0}
 }
+SCHEMA_DIR = Path(__file__).parent.parent.parent / "schema"
+SKILLS_DIR = Path(__file__).parent.parent.parent / "skills"
+
+# Mapping Agents to their Elite Industrial Skill SOPs
+AGENT_SKILL_MAP = {
+    "geo-ai-visibility": ["geo-citability", "geo-brand-mentions"],
+    "geo-content": ["geo-content"],
+    "geo-technical": ["geo-technical", "geo-crawlers", "geo-llmstxt"],
+    "geo-schema": ["geo-schema"],
+    "geo-platform-analysis": ["geo-platform-optimizer", "geo-compare"],
+    "geo-executive-roadmap": ["geo-audit", "geo-report", "geo-proposal"]
+}
+
+def extract_skill_logic(skill_name: str) -> str:
+    """Extract only the core logic/checklists from a SKILL.md to optimize tokens."""
+    skill_path = SKILLS_DIR / skill_name / "SKILL.md"
+    if not skill_path.exists(): return ""
+    
+    try:
+        content = skill_path.read_text()
+        # Find the start of the meat (usually ## Purpose or ## Category or ## Framework)
+        start_markers = ["## Purpose", "## Category", "## E-E-A-T", "## Audit Workflow"]
+        start_idx = -1
+        for m in start_markers:
+            idx = content.find(m)
+            if idx != -1 and (start_idx == -1 or idx < start_idx):
+                start_idx = idx
+        
+        if start_idx == -1: return ""
+        
+        # Strip out the "Output Format" and everything after
+        end_idx = content.find("## Output Format")
+        if end_idx == -1: end_idx = len(content)
+        
+        meat = content[start_idx:end_idx].strip()
+        return f"\n--- ELITE LOGIC: {skill_name.upper()} ---\n{meat}\n"
+    except Exception:
+        return ""
+
+def load_schema_templates() -> str:
+    """Load all JSON schema templates as a reference block for the AI."""
+    templates_block = "=== STANDARD_SCHEMA_TEMPLATES_GROUND_TRUTH ===\n"
+    if not SCHEMA_DIR.exists():
+        return ""
+    
+    for schema_file in SCHEMA_DIR.glob("*.json"):
+        try:
+            name = schema_file.name
+            content = schema_file.read_text()
+            templates_block += f"\nFILE: {name}\nCONTENT:\n{content}\n"
+        except Exception:
+            pass
+    return templates_block
+
 
 def load_agent_prompt(name: str) -> str:
     path = AGENT_DIR / f"{name}.md"
@@ -87,6 +141,27 @@ def get_supabase() -> Client | None:
     return None
 
 import time
+
+def clean_html_for_ai(html_content: str) -> str:
+    """Smart Stripper: Removes boilerplate (nav, footer, script, style) to save tokens."""
+    if not html_content: return ""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html_content, "lxml")
+        
+        # 1. Strip mission-critical noise
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside", "noscript"]):
+            tag.decompose()
+            
+        # 2. Extract text with preserved semantics
+        text = soup.get_text(separator="\n", strip=True)
+        # 3. Collapse whitespace
+        import re
+        text = re.sub(r'\n+', '\n', text)
+        return text[:15000] # Safety cap
+    except Exception as e:
+        print(f"[DEBUG] HTML Cleaner Error: {e}")
+        return html_content[:5000] # Fallback to raw truncation
 
 # ==============================================================================
 # [EXECUTION STEP 4: AI AGENT STRATIFIED EXECUTION]
@@ -200,15 +275,25 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                     parsed["summary"] = f"🚨 [RESTRICTED DATA]: {parsed.get('restriction_reason')}\n\n{parsed.get('summary', '')}"
 
 
-                # Log Success to Supabase
+                # Log Success to Supabase (Rich Persistence)
                 sb = get_supabase()
                 if sb:
                     try:
                         sb.table("agent_logs").insert({
-                            "audit_id": audit_id, "agent_name": agent_id, "agent_score": parsed["score"],
-                            "status": parsed["status"], "tokens_used": tokens_used, "error_message": parsed.get("restriction_reason")
+                            "audit_id": audit_id, 
+                            "agent_name": agent_id, 
+                            "agent_score": parsed["score"],
+                            "status": parsed["status"], 
+                            "summary": parsed.get("summary"),
+                            "findings": parsed.get("findings", []),
+                            "weaknesses": parsed.get("weaknesses", []),
+                            "suggested_code": parsed.get("suggested_code", []),
+                            "roadmap": parsed.get("roadmap", []),
+                            "tokens_used": tokens_used, 
+                            "error_message": parsed.get("restriction_reason")
                         }).execute()
-                    except Exception: pass
+                    except Exception as e: 
+                        print(f"[DEBUG] Supabase Save Error: {e}")
 
                 return parsed
 
@@ -227,7 +312,7 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
     }
 
 def prepare_agent_payload(agent_id: str, url: str, content_bundle: dict) -> str:
-    """Enterprise Router: Deliver only relevant specialized data per agent (v4 with Brand Ground Truth)."""
+    """Enterprise Router: Deliver only relevant specialized data per agent (v4 with Industrial SOPs)."""
     
     # 1. Base Context (Shared by all)
     context = f"TARGET_URL: {url}\n\n"
@@ -237,38 +322,52 @@ def prepare_agent_payload(agent_id: str, url: str, content_bundle: dict) -> str:
         context += f"BRAND_VISIBILITY_GROUND_TRUTH: {json.dumps(brand_report)}\n\n"
         
     pages = content_bundle.get('internal_pages', [])
+
+    # --- Elite Industrial Skill SOPs (Optimized Injection) ---
+    skills_to_load = AGENT_SKILL_MAP.get(agent_id, [])
+    sop_block = ""
+    if skills_to_load:
+        sop_block = "\n=== ELITE INDUSTRIAL STANDARD OPERATING PROCEDURES (SOP) ===\n"
+        for s in skills_to_load:
+            sop_block += extract_skill_logic(s)
     
     # Define payload slices (Absolute Context Slices)
     if agent_id == "geo-schema":
         schema_data = ""
         for p in pages:
             schema_data += f"--- SCHEMA FRAGMENT: {p['url']} ---\nJSON-LD: {json.dumps(p.get('structured_data', []))}\n\n"
-        return context + f"AUDIT DATA (FULL SCHEMA ONLY):\n{schema_data}\n"
+        templates = load_schema_templates()
+        return context + f"AUDIT DATA (FULL SCHEMA ONLY):\n{schema_data}\n\n{templates}\n" + sop_block
 
     elif agent_id == "geo-technical":
         tech_data = ""
         for p in pages:
             tech_data += f"--- TECH SCAN: {p['url']} ---\nHTTP: {json.dumps(p.get('security_headers', {}))}\nMETRICS: {p.get('page_weight_kb')}KB | TTFB: {p.get('ttfb_ms')}ms | SSR: {p.get('has_ssr')}\nCOMPRESSED: {p.get('is_compressed')} | REDIRECTS: {len(p.get('redirect_chain', []))}\n"
-        return context + f"AUDIT DATA (TECHNICAL HEADERS ONLY):\n{tech_data}\nROBOTS: {content_bundle.get('robots')}"
+        return context + f"AUDIT DATA (TECHNICAL HEADERS ONLY):\n{tech_data}\nROBOTS: {content_bundle.get('robots')}\n" + sop_block
 
     elif agent_id == "geo-content":
         content_data = ""
         for i, p in enumerate(pages):
-            limit = 10000 if i == 0 else 1500 
-            content_data += f"--- CONTENT DEEP DIVE: {p['url']} ---\nH1: {p.get('h1')}\nBODY: {p.get('content', '')[:limit]}\n"
-        return context + f"AUDIT DATA (TEXT CONTENT ONLY):\n{content_data}"
+            # Optimized: Clean HTML to focus on core semantics
+            raw_content = p.get('content', '')
+            cleaned = clean_html_for_ai(raw_content)
+            limit = 8000 if i == 0 else 1000 # Homepage gets more budget
+            content_data += f"--- CONTENT DEEP DIVE: {p['url']} ---\nH1: {p.get('h1')}\nBODY: {cleaned[:limit]}\n"
+        return context + f"AUDIT DATA (TEXT CONTENT ONLY):\n{content_data}\n" + sop_block
 
     elif agent_id == "geo-ai-visibility":
         visibility_data = ""
         for p in pages:
-            visibility_data += f"--- VISIBILITY SNIPPET: {p['url']} ---\nH1: {p.get('h1')}\nSNIPPET: {p.get('content', '')[:400]}\n"
-        return context + f"AUDIT DATA (SNIPPETS ONLY): \n{visibility_data}"
-
+            cleaned = clean_html_for_ai(p.get('content', ''))
+            visibility_data += f"--- VISIBILITY SNIPPET: {p['url']} ---\nH1: {p.get('h1')}\nSNIPPET: {cleaned[:400]}\n"
+        return context + f"AUDIT DATA (SNIPPETS ONLY): \n{visibility_data}\n" + sop_block
+    
     elif agent_id == "geo-platform-analysis":
-        platform_data = ""
+        # Full content for top-tier analysis
+        full_data = ""
         for p in pages:
-            platform_data += f"--- PLATFORM ASSET: {p['url']} ---\nMETA: {p.get('meta', 'None')}\nH1: {p.get('h1')}\nCANONICAL: {p.get('canonical', 'Not Found')}\nSTATUS: {p.get('status_code', 200)}\n"
-        return context + f"AUDIT DATA (META & CRAWLER SIGNALS ONLY):\n{platform_data}\nROBOTS: {content_bundle.get('robots')}\nLLMS: {content_bundle.get('llms')}"
+            full_data += f"--- PAGE: {p['url']} ---\nTitle: {p.get('title')}\nMetadata: {json.dumps(p.get('metadata', {}))}\nText: {p.get('text_content', '')[:2000]}\n\n"
+        return context + f"AUDIT DATA (PLATFORM ANALYSIS):\n{full_data}\n" + sop_block
 
     elif agent_id == "geo-executive-roadmap":
         # THE MASTER STRATEGIST: Review specialist results and ROI
@@ -276,9 +375,11 @@ def prepare_agent_payload(agent_id: str, url: str, content_bundle: dict) -> str:
         for res in content_bundle.get("agent_results", []):
             specialist_results += f"### {res.get('label')} (Score: {res.get('score')})\nSUMMARY: {res.get('summary')}\nFIXES: {json.dumps(res.get('top_fixes', []))}\nEVIDENCE: {res.get('evidence_url')}\n\n"
         
-        return context + f"MASTER AUDIT SYNTHESIS:\n{specialist_results}\nGOAL: Create a prioritized 30-60-90 day ROI roadmap."
+        return context + f"MASTER AUDIT SYNTHESIS:\n{specialist_results}\nGOAL: Create a prioritized 30-60-90 day ROI roadmap.\n" + sop_block
 
-    return context + "ERROR: Agent ID not recognized for specialization."
+    # Default: Return everything + SOP
+    return context + str(content_bundle) + sop_block
+
 
 def run_triage_agent(discovery_queue: list, api_key: str) -> list:
     """Triage Agent: Efficiently filters 5,000 URLs → 50 high-value targets (Haiku)."""
@@ -526,7 +627,7 @@ FORMULA_TEXT = "(Visibility * 0.25) + (Content EEAT * 0.20) + (Technical * 0.15)
 
 # ==============================================================================
 # [EXECUTION STEP 1: INITIAL UI DASHBOARD RENDER]
-# The user visits the app on their browser and the frontend dashboard renders gracefully.
+# The user visits the app on their browser and the frontend dashboard renders gracefully checks the database for previous scans.
 # ==============================================================================
 @app.route("/")
 def dashboard():
@@ -648,6 +749,9 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
 # [EXECUTION STEP 3: MASTER ANALYSIS SEQUENCE INITIATED]
 # Central nervous system. Triggered when the user enters a URL and hits "Analyze".
 # ==============================================================================
+
+# Since many modern sites (like Typeform) use complex JavaScript to set security cookies, a simple request isn't enough.
+#  Your code uses Playwright (a real browser) for the first page:
 @app.route("/analyze_url", methods=["POST"])
 def analyze_url():
     """Deep Site-wide Recursive Audit (30+ Pages)."""
@@ -658,6 +762,13 @@ def analyze_url():
     if not url: return "Please enter a valid URL."
     if not url.startswith("http"): url = "https://" + url
     
+    # --- SHARED STATE FOR TEST SCRIPTS ---
+    try:
+        os.makedirs("scratch", exist_ok=True)
+        with open("scratch/current_site.txt", "w") as f:
+            f.write(url)
+    except Exception: pass
+
     print(f"\n{'='*50}\n[DEBUG] [MASTER TRACE] Starting Deep Audit for: {url}")
     
     sb = get_supabase()
@@ -722,9 +833,10 @@ def analyze_url():
     
     print(f"[DEBUG] [STEP 1] Crawling Sitemap & Deep Extraction...")
     if fetch_page:
-        # ── Universal Session Priming (Stealth & Persistence) ────────────
+        # ── Universal Master Session (Elite Stealth) ────────────────────
         import requests
         session_obj = requests.Session()
+        session_obj.headers.update(DEFAULT_HEADERS)
         
         # A. Robots & LLMS
         rob = fetch_robots_txt(url) if fetch_robots_txt else {}
@@ -737,31 +849,12 @@ def analyze_url():
         content_bundle["llms"] = json.dumps(data_llms)
         metrics["crawlers"] = data_robots.get("ai_crawler_status", {})
         
-        discovery_queue = []
-        if rob.get("sitemaps"):
-            try:
-                from fetch_page import crawl_sitemap
-                sitemap_links = crawl_sitemap(url, max_pages=MAX_DISCOVERY)
-                discovery_queue.extend([l for l in sitemap_links if l not in visited])
-            except ImportError: pass
-
-        # BFS Fallback Check if Sitemap failed or didn't exist
-        if not discovery_queue:
-            print("[DEBUG] No Sitemap found or sitemap empty. Falling back to Recursive BFS Crawler...")
-            try:
-                from fetch_page import recursive_bfs_crawl
-                bfs_links = recursive_bfs_crawl(url, max_pages=3000)
-                discovery_queue.extend([l for l in bfs_links if l not in visited])
-            except ImportError as e:
-                print(f"[DEBUG] Failed to import recursion crawler: {e}")
-
-        # B. Homepage extraction (Forcing Playwright to bypass initial bot challenges)
+        # B. Homepage extraction (Handshake Priming)
+        # We always use Playwright for the homepage to get the authenticated / JS-prime cookies
         res = fetch_page(url, use_playwright=True)
         brand_name = domain.split('.')[0].capitalize() # Fallback
         
-        # --- STEALTH HANDSHAKE BRIDGE (New) ---
-        # Initialize a persistent session using the browser's credentials
-        session_obj = requests.Session()
+        # --- STEALTH HANDSHAKE BRIDGE ---
         if res.get("cookies"):
             for cookie in res["cookies"]:
                 session_obj.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
@@ -769,6 +862,27 @@ def analyze_url():
         
         if res.get("browser_ua"):
             session_obj.headers.update({"User-Agent": res["browser_ua"]})
+        
+        discovery_queue = []
+        if rob.get("sitemaps"):
+            try:
+                from fetch_page import crawl_sitemap
+                # Pass the primed session to sitemap crawler
+                sitemap_links = crawl_sitemap(url, max_pages=MAX_DISCOVERY, session=session_obj)
+                discovery_queue.extend([l for l in sitemap_links if l not in visited])
+                visited.update(discovery_queue)
+            except ImportError: pass
+        
+        # BFS Fallback Check if Sitemap failed or didn't exist
+        if not discovery_queue:
+            print("[DEBUG] No Sitemap found or sitemap empty. Falling back to Recursive BFS Crawler...")
+            try:
+                from fetch_page import recursive_bfs_crawl
+                bfs_links = recursive_bfs_crawl(url, max_pages=3000, session=session_obj)
+                discovery_queue.extend([l for l in bfs_links if l not in visited])
+                visited.update(discovery_queue)
+            except ImportError as e:
+                print(f"[DEBUG] Failed to import recursion crawler: {e}")
         
         # Detect bot protection in the response
         page_text = res.get("text_content", "").lower()
@@ -983,6 +1097,7 @@ def download_pdf(task_id):
 # [EXECUTION STEP 2: API KEY CONFIGURATION]
 # If the user clicks Settings, they provide their Anthropic key to secure the session.
 # ==============================================================================
+#mentiond in frontend
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
     if request.method == "POST":
@@ -996,7 +1111,7 @@ def settings():
     key_placeholder = "***" if is_key_set else "Enter Claude API Key"
     return render_template("settings.html", key_placeholder=key_placeholder)
 
-
+#global in code
 @app.route("/compare", methods=["POST"])
 def compare_competitive():
     """Enterprise Benchmarking: Compare target vs competitor URL."""

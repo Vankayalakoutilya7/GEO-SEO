@@ -19,13 +19,18 @@ CREATE TABLE IF NOT EXISTS audits (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Agent Logs Table
+-- 3. Agent Logs Table (Rich Results v2)
 CREATE TABLE IF NOT EXISTS agent_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     audit_id UUID REFERENCES audits(id) ON DELETE CASCADE,
     agent_name TEXT NOT NULL,
     agent_score INTEGER DEFAULT 0,
     status TEXT DEFAULT 'SUCCESS',
+    summary TEXT,
+    findings JSONB DEFAULT '[]'::jsonb,
+    weaknesses JSONB DEFAULT '[]'::jsonb,
+    suggested_code JSONB DEFAULT '[]'::jsonb,
+    roadmap JSONB DEFAULT '[]'::jsonb,
     tokens_used INTEGER DEFAULT 0,
     error_message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

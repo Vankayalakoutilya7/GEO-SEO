@@ -4,6 +4,17 @@ Fetch and parse web pages for GEO analysis.
 Extracts HTML, text content, meta tags, headers, and structured data.
 """
 
+
+
+# Mode,    Action,Best Use Case
+# page,    Runs fetch_page.,Deep technical/SEO audit of a single URL.
+# robots,    Runs fetch_robots_txt.,Checking if a site blocks AI or specific bots.
+# llms,    Runs fetch_llms_txt.,Checking if a site provides clean data for LLMs.
+# bfs,    Runs recursive_bfs_crawl.,"Discovery mode—finding up to 3,000 pages manually."
+# sitemap,   Runs crawl_sitemap.,Discovery mode—finding pages via the official map.
+# blocks,  Runs extract_content_blocks.,"Content analysis—breaking a page into ""citable"" chunks."
+# full,    Runs almost everything.,A complete audit of a brand's entry point.
+
 import sys
 import json
 import re

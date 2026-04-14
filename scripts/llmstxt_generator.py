@@ -27,6 +27,11 @@ DEFAULT_HEADERS = {
 }
 
 
+
+# so llms.txt what does it do is:
+# crawl the sites from homepage and checks meta data and create a list.
+#  which is then given to other functions fro further process
+
 def validate_llmstxt(url: str) -> dict:
     """Check if llms.txt exists and validate its format."""
     parsed = urlparse(url)

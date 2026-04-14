@@ -10,6 +10,13 @@ Based on research showing optimal AI-cited passages are:
 - Structured with clear answer patterns
 """
 
+
+
+# Key,Purpose
+# total_blocks_analyzed,  Tells you if the page is a long-form guide or a short landing page.
+# average_citability_score ,    Your baseline for comparing against competitors like Typeform.
+# top_5_citable,   The sections of your site most likely to be quoted by ChatGPT or Gemini.
+# grade_distribution,   A quick visual of the page quality.
 import sys
 import json
 import re
@@ -35,7 +42,9 @@ def score_passage(text: str, heading: Optional[str] = None) -> dict:
         "uniqueness_signals": 0,
     }
 
-    # === 1. Answer Block Quality (30%) ===
+    # === 1. Answer Block Quality (30%)  
+    # This code is an Answer Block Quality (ABQ) Scorer. 
+    # It’s a specialized heuristic used to determine how likely a piece of text is to be chosen as a "Featured Snippet"===
     abq_score = 0
 
     # Check for definition patterns ("X is...", "X refers to...", "X means...")
@@ -87,7 +96,12 @@ def score_passage(text: str, heading: Optional[str] = None) -> dict:
 
     scores["answer_block_quality"] = min(abq_score, 30)
 
-    # === 2. Self-Containment (25%) ===
+    # === 2. Self-Containment (25%)
+    # Factor,Optimal Criteria,Max Points
+    # Length,134–167 words,10
+    # Specificity,<2% pronouns,8
+    # Authority,3+ Proper Nouns,7
+    # Total,,25/25 ===
     sc_score = 0
 
     # Optimal word count (134-167 words)
@@ -242,7 +256,8 @@ def score_passage(text: str, heading: Optional[str] = None) -> dict:
         "preview": " ".join(words[:30]) + ("..." if word_count > 30 else ""),
     }
 
-
+#first clean up page by removing tags.It ignores any paragraph with fewer than 5 words and any block with fewer than 20 words.
+#then calls score_passage()
 def analyze_page_citability(url: str) -> dict:
     """Analyze all content blocks on a page for citability."""
     try:

@@ -30,7 +30,7 @@ DEFAULT_HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-
+# Since scraping YouTube directly can be difficult without an API key, this function provides a blueprint for an audit. It asks five critical questions:
 def check_youtube_presence(brand_name: str) -> dict:
     """Check brand presence on YouTube."""
     result = {
@@ -66,6 +66,9 @@ def check_youtube_presence(brand_name: str) -> dict:
     return result
 
 
+# Is it always the same? Not always, but it is true 90% of the time. 
+# This is why your code includes "Search" fallbacks.
+#  If wikipedia.org/wiki/Typeform didn't exist, the script uses the Search API to find the closest match.
 def check_reddit_presence(brand_name: str) -> dict:
     """Check brand presence on Reddit."""
     result = {
