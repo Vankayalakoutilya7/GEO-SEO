@@ -29,12 +29,14 @@ except ImportError:
     print("WARNING: Required packages (requests, bs4) not installed. Crawling functions will be disabled.")
 
 try:
-    #Unlike requests, Playwright executes JavaScript and renders the page exactly as a real user would see it.
     from playwright.sync_api import sync_playwright
-    from playwright_stealth import stealth_sync
+    from playwright_stealth import Stealth
+    STEALTH_ENGINE = Stealth()
     PLAYWRIGHT_AVAILABLE = True
-except ImportError:
+except Exception as e:
     PLAYWRIGHT_AVAILABLE = False
+    STEALTH_ENGINE = None
+    print(f"[ENVIRONMENT DEBUG] Playwright Engine Disabled: {e}")
 
 # Common AI crawler user agents for testing. like ID card for bots
 AI_CRAWLERS = {
@@ -68,6 +70,37 @@ USER_AGENTS = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:124.0) Gecko/20100101 Firefox/124.0",
 ]
+
+def is_internal(url_to_check, seed_url, allowed_domains=None):
+    """
+    Determines if a URL is 'internal' to the brand being audited.
+    Supports fuzzy matching to handle redirects across TLDs (e.g., canva.in -> canva.com).
+    """
+    from urllib.parse import urlparse
+    
+    if not url_to_check or not seed_url: return False
+    
+    # 1. Exact Match Check
+    target_host = urlparse(url_to_check).netloc.replace("www.", "").lower()
+    if not target_host: return False # Relative link check happens elsewhere
+    
+    seed_host = urlparse(seed_url).netloc.replace("www.", "").lower()
+    
+    if target_host == seed_host: return True
+    if allowed_domains and target_host in allowed_domains: return True
+    
+    # 2. Fuzzy Root Match (e.g., canva.in and canva.com)
+    # Extracts the Second-Level Domain (SLD) if possible
+    def get_sld(host):
+        parts = host.split('.')
+        if len(parts) >= 2:
+            return parts[-2] # Simple but effective for brands
+        return host
+
+    if get_sld(target_host) == get_sld(seed_host) and len(get_sld(target_host)) > 3:
+        return True
+        
+    return False
 
 #what content to take and store
 def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, session: any = None) -> dict:
@@ -182,15 +215,18 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
             })
 
         # Links (Extract BEFORE decomposing nav/footer/header)
-        parsed_url = urlparse(url)
-        base_domain = parsed_url.netloc
+        final_host = urlparse(result["url"]).netloc.replace("www.", "")
+        seed_host = urlparse(url).netloc.replace("www.", "")
+        
         for link in soup.find_all("a", href=True):
             href = urljoin(url, link["href"])
-            # Remove fragments (#section) for cleaner discovery
             href = href.split("#")[0].rstrip("/")
             link_text = link.get_text(strip=True)
             parsed_href = urlparse(href)
-            if parsed_href.netloc == base_domain:
+            href_host = parsed_href.netloc.replace("www.", "")
+            
+            # Fuzzy Match: Use is_internal to handle redirects/TLD jumps
+            if is_internal(href, url, allowed_domains={final_host}):
                 result["internal_links"].append({"url": href, "text": link_text})
             elif parsed_href.scheme in ("http", "https"):
                 result["external_links"].append({"url": href, "text": link_text})
@@ -237,14 +273,19 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
         result["errors"].append(f"Unexpected error: {str(e)}")
 #If the root div has less than 50 characters (text_length < 50) and the whole page has fewer than 200 words, it flags the page as has_ssr_content = False.
 #Why? If a page is that empty, it means the content is likely hidden behind a JavaScript "wall" that a simple requests call can't see.
-    # Universal Blockade Detection (Status 403, 429, or empty HTML/Title)
+    # Universal Blockade Detection (Status 403, 429, or empty HTML/Title/Links)
     status_block = result.get("status_code") in [403, 401, 429]
-    content_block = not result.get("title") or not result.get("meta_tags") or not result.get("has_ssr_content")
+    # If no title, meta, content, OR NO LINKS were found, it's likely a JS rendering wall
+    content_block = not result.get("title") or not result.get("meta_tags") or not result.get("has_ssr_content") or len(result.get("internal_links", [])) == 0
     blockade_text = any(x in (result["text_content"] or "").lower() for x in ["access denied", "please verify", "captcha", "bot detection"])
     
     triggers_pivot = use_playwright or status_block or content_block or blockade_text
     
+    if triggers_pivot:
+        print(f"[DEBUG] Pivot Triggered: status_block={status_block}, content_block={content_block}, blockade_text={blockade_text}, internal_links={len(result.get('internal_links', []))}")
+    
     if triggers_pivot and PLAYWRIGHT_AVAILABLE:
+        print(f"[DEBUG] Entering Playwright Block...")
         try:
             import time
             with sync_playwright() as p:
@@ -263,10 +304,16 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                 
                 page = context.new_page()
                 # Apply Industrial Stealth (Bypass detection)
-                stealth_sync(page)
+                if STEALTH_ENGINE:
+                    STEALTH_ENGINE.apply_stealth_sync(page)
                 
                 # Visit with human-like jitter
-                page.goto(url, wait_until="load", timeout=60000)
+                page.goto(url, wait_until="networkidle", timeout=60000)
+                # Wait an extra 2 seconds for JS skeletons to populate
+                time.sleep(2)
+                
+                rendered_text = page.inner_text("body")
+                rendered_html = page.content()
                 
                 # ADAPTIVE HYDRATION LOOP (v5)
                 # Monitors content stability rather than static timeouts
@@ -302,12 +349,40 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                     result["bot_detected"] = True
                 
                 # Final content capture logic
-                if len(rendered_text) > len(result["text_content"]) * 1.2 or (not result["text_content"] and len(rendered_text) > 200):
+                if len(rendered_text) > len(result["text_content"]) * 1.2 or (not result["text_content"] and len(rendered_text) > 200) or len(result.get("internal_links", [])) == 0:
                     result["has_ssr_content"] = False
                     result["rendering_wall_detected"] = True
                     result["text_content"] = rendered_text
                     result["word_count"] = len(rendered_text.split())
                     result["title"] = rendered_soup.title.string if rendered_soup.title else result["title"]
+                    
+                    # RE-EXTRACT LINKS FROM RENDERED CONTENT
+                    result["internal_links"] = []
+                    result["external_links"] = []
+                    result["structured_data"] = []
+                    
+                    final_host = urlparse(page.url).netloc.replace("www.", "")
+                    seed_host = urlparse(url).netloc.replace("www.", "")
+                    
+                    for link in rendered_soup.find_all("a", href=True):
+                        href = urljoin(url, link["href"])
+                        href = href.split("#")[0].rstrip("/")
+                        link_text = link.get_text(strip=True)
+                        parsed_href = urlparse(href)
+                        href_host = parsed_href.netloc.replace("www.", "")
+                        
+                        # Fuzzy Match: Use is_internal to handle redirects/TLD jumps
+                        if is_internal(href, url, allowed_domains={final_host}):
+                            result["internal_links"].append({"url": href, "text": link_text})
+                        elif parsed_href.scheme in ("http", "https"):
+                            result["external_links"].append({"url": href, "text": link_text})
+                            
+                    # RE-EXTRACT STRUCTURED DATA
+                    for script in rendered_soup.find_all("script", type="application/ld+json"):
+                        try:
+                            data = json.loads(script.string)
+                            result["structured_data"].append(data)
+                        except: pass
                 
                 browser.close()
         except Exception as e:
@@ -641,50 +716,73 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
 def recursive_bfs_crawl(url: str, max_pages: int = 3000, timeout: int = 15, session: any = None) -> list:
     """Strategic BFS discovery that avoids bot-walls and preserves speed."""
     import concurrent.futures
-    base_domain = urlparse(url).netloc.replace("www.", "")
-    visited = {url.split("#")[0].rstrip("/")}
-    start_clean = url.split("#")[0].rstrip("/")
-    queue = [start_clean]
-    discovered = [start_clean]
+    from urllib.parse import urlparse, urljoin
     
-    print(f"[DEBUG] [BFS Crawler] Starting fast recursive crawl for {base_domain} (Max: {max_pages})")
+    # 1. Setup Base Context (Root Domain extraction)
+    start_url = url.split("#")[0].rstrip("/")
+    seed_host = urlparse(start_url).netloc.replace("www.", "")
+    # allowed_domains will include any domain we pivot to
+    allowed_domains = {seed_host}
     
-    # Use provided session or create a new one for stealth
+    visited = {start_url}
+    discovered = [start_url]
+    queue = []
+    
+    print(f"[DEBUG] [BFS Crawler] Starting scan for {seed_host} (Max: {max_pages})")
+    
+    # 2. Browser Handshake (The Secret Sauce)
+    print(f"[DEBUG] [BFS Crawler] Performing Handshake with Browser for seed page...")
+    res = fetch_page(url, use_playwright=True)
+    
+    # Update search scope if redirected (e.g. canva.in -> canva.com)
+    if res and res.get("url"):
+        final_host = urlparse(res["url"]).netloc.replace("www.", "")
+        if final_host not in allowed_domains:
+            print(f"[DEBUG] [BFS Crawler] Domain Pivot Detected: {seed_host} -> {final_host}. Expanding scope.")
+            allowed_domains.add(final_host)
+
+    if res and res.get("internal_links"):
+        for link in res["internal_links"]:
+            l_url = link["url"].split("#")[0].rstrip("/")
+            l_host = urlparse(l_url).netloc.replace("www.", "")
+            
+            # Match against ANY domain in our allowed set
+            if any(domain in l_host or l_host in domain for domain in allowed_domains):
+                if l_url not in visited:
+                    visited.add(l_url)
+                    discovered.append(l_url)
+                    queue.append(l_url)
+        print(f"[DEBUG] [BFS Crawler] Browser Handshake successful. Discovered {len(discovered)} seed links.")
+
+    # 3. Fast Parallel Extraction
     import requests
     actual_session = session if session else requests.Session()
-    if not session:
-        actual_session.headers.update(DEFAULT_HEADERS)
+    if not session: actual_session.headers.update(DEFAULT_HEADERS)
     
+    # Inject cookies from handshake
+    if res.get("cookies"):
+        for cookie in res["cookies"]:
+            actual_session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         while queue and len(discovered) < max_pages:
-            # Process in small batches (5) to protect IP from blocking
-            batch = queue[:5]
-            queue = queue[5:]
+            batch = queue[:10]
+            queue = queue[10:]
             
-            # Use Playwright only for the very first page of BFS discovery (the seed)
-            # to ensure we get past Initial challenge screens and capture cookies.
-            is_seed = (len(discovered) <= 1)
-            future_to_url = {executor.submit(fast_extract_links, u, base_domain, timeout, use_playwright=is_seed, session=actual_session): u for u in batch}
+            future_to_url = {executor.submit(fast_extract_links, u, base_domain, timeout, session=actual_session): u for u in batch}
             for future in concurrent.futures.as_completed(future_to_url):
                 try:
-                    new_links, cookies = future.result()
-                    
-                    # If this was the seed run, prime the session with extracted cookies
-                    if cookies:
-                        for cookie in cookies:
-                            actual_session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
-                        print(f"[DEBUG] [BFS Crawler] Session primed with {len(cookies)} cookies.")
+                    new_links, _ = future.result()
                     for link in new_links:
                         if link not in visited:
-                            visited.add(link)
-                            discovered.append(link)
-                            queue.append(link)
-                            if len(discovered) >= max_pages:
-                                break
-                except Exception:
-                    pass
-                if len(discovered) >= max_pages:
-                    break
+                            l_host = urlparse(link).netloc.replace("www.", "")
+                            if base_domain in l_host or l_host in base_domain:
+                                visited.add(link)
+                                discovered.append(link)
+                                queue.append(link)
+                            if len(discovered) >= max_pages: break
+                except Exception: pass
+                if len(discovered) >= max_pages: break
 
     print(f"[DEBUG] [BFS Crawler] Finished. Discovered {len(discovered)} unique URLs.")
     return discovered[:max_pages]

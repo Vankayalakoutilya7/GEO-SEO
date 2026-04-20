@@ -38,9 +38,6 @@ CREATE TABLE IF NOT EXISTS agent_logs (
 );
 
 -- 4. Enable Row Level Security (RLS) - Optional: Adjust as needed for your app
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audits ENABLE ROW LEVEL SECURITY;
-ALTER TABLE agent_logs ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public access (for testing, adjust for production)
 CREATE POLICY "Allow public select on projects" ON projects FOR SELECT USING (true);

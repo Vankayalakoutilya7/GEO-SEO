@@ -189,8 +189,8 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
     except Exception as e:
         print(f"[DEBUG] Failed to write payload log: {e}")
 
-    # ── Claude 4 Safety Net (Current for April 2026) ──────────────
-    models_to_try = ["claude-haiku-4-5"]
+    # ── Claude Stable Deployment (Industrial Resilience) ──────────────
+    models_to_try = ["claude-3-haiku-20240307"]
     
     # Define Structured Output Tool
     tools = [{
@@ -290,27 +290,20 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                     except Exception as e: 
                         err_str = str(e)
                         if "PGRST" in err_str: # Catch any PostgREST column/cache mismatches
-                            print(f"\n[!] ALERT: Supabase Cache Stale or Column Mismatch. Attempting Tier 2 (Legacy Save)...")
+                            print(f"\n[!] ALERT: Supabase Cache Stale or Column Mismatch in {agent_id}. Attempting Tier 2...")
                             try:
                                 # Tier 2: LEGACY SAVE (Minimal operational data)
                                 sb.table("agent_logs").insert({
                                     "audit_id": audit_id, "agent_name": agent_id, "agent_score": parsed["score"],
                                     "status": parsed["status"], "summary": parsed.get("summary")
                                 }).execute()
-                                print(f"[+] Tier 2 Save Successful. (Rich metadata omitted)")
+                                print(f"[+] Tier 2 Save Successful for {agent_id}.")
                             except Exception as e2:
-                                print(f"[!] Tier 2 Failed: {e2}. Attempting Tier 3 (Atomic Save)...")
-                                try:
-                                    # Tier 3: ATOMIC SAVE (Just the relation and status)
-                                    # This ensures Foreign Key consistency and UI status visibility
-                                    sb.table("agent_logs").insert({
-                                        "audit_id": audit_id, "agent_name": agent_id, "status": "PARTIAL_SUCCESS"
-                                    }).execute()
-                                    print(f"[+] Tier 3 Atomic Save Successful. System recovered from Schema Lock.")
-                                except Exception as e3:
-                                    print(f"[CRITICAL] Database Lock: Failed all recovery tiers. Primary error: {e}")
+                                print(f"[!] Tier 2 Failed for {agent_id}: {e2}.")
                         else:
-                            print(f"[DEBUG] Supabase Save Error: {err_str}")
+                            print(f"[DEBUG] Supabase Save Error in {agent_id}: {err_str}")
+                else:
+                    print(f"[DEBUG] Supabase client skipped in worker thread ({agent_id}) - Check environment variables.")
 
                 return parsed
 
@@ -716,9 +709,9 @@ def build_and_upload_pdf(task_id: str, data: dict, sb: Client | None) -> str | N
             "suggested_code": [],
             "platforms": {
                 "ChatGPT Web Search": results_map.get("geo-ai-visibility", 0),
-                "claude-haiku-4-5": results_map.get("geo-ai-visibility", 0),
+                "Claude Haiku": results_map.get("geo-ai-visibility", 0),
             },
-            "crawler_access": {k: {"status": v, "platform": "Generative AI", "recommendation": "Allow" if v == "ALLOWED" else "Review"} for k, v in data["metrics"].get("crawlers", {}).items()},
+            "crawler_access": {k: {"status": v, "platform": "Generative AI", "recommendation": "Allow" if v == "ALLOWED" else "Review"} for k, v in (data["metrics"].get("crawlers") or {}).items()},
             "quick_wins": ["Implement llms.txt standard" if data["metrics"].get("faq_count", 0) < 3 else "Optimize Answer Blocks"],
         }
         
@@ -786,7 +779,13 @@ def analyze_url():
 
     print(f"\n{'='*50}\n[DEBUG] [MASTER TRACE] Starting Deep Audit for: {url}")
     
+    # ── 0. Supabase Connectivity Guard ────────────────────────────────
     sb = get_supabase()
+    if not sb:
+        print(f"[CRITICAL] Supabase Client Failed to Initialize. Check SUPABASE_URL/KEY in .env")
+    else:
+        print(f"[DEBUG] Supabase Connection: Active.")
+    
     project_id = None
     audit_id = str(uuid.uuid4())  # Pre-generated UUID for the historical run
 
@@ -804,7 +803,10 @@ def analyze_url():
                 project_id = existing.data[0]['id']
             else:
                 # Create a new project row and capture its generated ID
+                print(f"[DEBUG] [STEP 0] Creating new project for {domain}...")
                 new_proj = sb.table("projects").insert({"target_url": domain}).execute()
+                if not new_proj.data:
+                    print(f"[ERROR] Project Creation Failed (Empty Data). Check RLS policies for 'projects' table.")
                 project_id = new_proj.data[0]['id']
 
             # ── Resilient Audit Placeholder ──────────────────────────
@@ -814,23 +816,30 @@ def analyze_url():
                     "status": "RUNNING", "pdf_url": None, "metrics": {}
                 }).execute()
             except Exception as ae:
-                if "PGRST" in str(ae):
-                    print(f"[!] ALERT: Audits Table Schema Stale. Attempting Atomic Placeholder...")
-                    sb.table("audits").insert({
-                        "id": audit_id, "project_id": project_id, "status": "RUNNING"
-                    }).execute()
+                err_str = str(ae)
+                if "PGRST" in err_str:
+                    print(f"[!] ALERT: Audits Table Schema Stale or RLS Block. Attempting Atomic Placeholder...")
+                    try:
+                        sb.table("audits").insert({
+                            "id": audit_id, "project_id": project_id, "status": "RUNNING"
+                        }).execute()
+                        print(f"[+] Atomic Audit Placeholder Created.")
+                    except Exception as ae2:
+                        print(f"[CRITICAL] Database Block: Audit initialization failed after fallback. Error: {ae2}")
                 else: 
-                    print(f"[ERROR] Critical Audit Initialization Failure: {ae}")
+                    print(f"[ERROR] Critical Audit Initialization Failure: {err_str}")
+                    if "403" in err_str or "new row violates" in err_str:
+                        print("[!] DIAGNOSTIC: This looks like an RLS Policy violation. Please check your 'audits' table policies.")
                     raise ae
 
-            # --- 5-HOUR CACHE PROTECTION (New) ---
+            # --- 30-MINUTE CACHE PROTECTION (New) ---
             print(f"[DEBUG] Checking Cache for Project {project_id}...")
-            # Check last 5 successful audits for this domain
+            # Check the latest successful audit for this domain
             cache_res = sb.table("audits").select("id, final_score, metrics, created_at, summary")\
                 .eq("project_id", project_id)\
                 .eq("status", "SUCCESS")\
                 .order("created_at", desc=True)\
-                .limit(5).execute()
+                .limit(1).execute()
             
             if cache_res.data:
                 latest = cache_res.data[0]
@@ -842,7 +851,7 @@ def analyze_url():
                 # Compare awareness-safe datetimes
                 age = datetime.now(timezone.utc) - created_at
                 
-                if age < timedelta(hours=5):
+                if age < timedelta(minutes=5):
                     print(f"[DEBUG] [CACHE HIT] Serving recent audit from {created_at} (Age: {age})")
                     cached_audit_id = latest["id"]
                     
@@ -983,8 +992,18 @@ def analyze_url():
         else:
             content_bundle["crawl_obstructed"] = False
         
+        external_links = []
+        # C. Content Population & Redirect Handling
+        final_url = res.get("url", url)
+        if urlparse(final_url).netloc != urlparse(url).netloc:
+            print(f"[DEBUG] [STEP 1.1] Redirect Pivot: {url} -> {final_url}. Following new domain.")
+            url = final_url
+            domain = urlparse(url).netloc.replace("www.", "")
+
         if res and not res.get("errors"):
             content_bundle["page"] = res.get("text_content", "")
+            print(f"[DEBUG] [STEP 1.2] Content Bundle Primed: {len(content_bundle['page'])} chars extracted from {url}")
+            external_links = res.get("external_links", [])
             # Try to get better brand name from H1
             h1s = res.get("h1_tags", [])
             if h1s: brand_name = h1s[0]
@@ -1000,7 +1019,7 @@ def analyze_url():
         # Step 1.2: Brand Visibility Scan (Wikipedia/Reddit/YouTube)
         if generate_brand_report:
             print(f"[DEBUG] [STEP 1.2] Scanning Brand Visibility for '{brand_name}'...")
-            content_bundle["brand_report"] = generate_brand_report(brand_name, domain)
+            content_bundle["brand_report"] = generate_brand_report(brand_name, domain, external_links=external_links)
             
         # C. Intelligent Selection Logic (Top 1000)
         discovery_queue = list(dict.fromkeys(discovery_queue))
@@ -1047,16 +1066,26 @@ def analyze_url():
                         "status_code": r.get("status_code", 200)
                     })
                     metrics["schema_types"].update([s.get("@type") for s in r.get("structured_data", []) if isinstance(s, dict)])
-        
-        # Logic to extract diagnostics from errors even if they didn't return a 400 (e.g. timeouts/pivots)
-        for r in results_crawl:
-            if r.get("errors"):
-                if "diagnostics" not in metrics: metrics["diagnostics"] = []
-                # Only add if not already added by 400 check
-                if not any(d["url"] == r["url"] for d in metrics["diagnostics"]):
-                    metrics["diagnostics"].append({"url": r["url"], "status": r.get("status_code", "ERR"), "error": ", ".join(r["errors"])})
-
         # Calculate Advanced Aggregate Metrics for UI
+        # FALLBACK: If discovery failed, ensure we at least audit the homepage
+        if not content_bundle["internal_pages"] and res and not res.get("errors"):
+            print("[WARNING] [SEED FALLBACK] Discovery found 0 pages. Auditing homepage as deep audit fallback.")
+            content_bundle["internal_pages"].append({
+                "url": res["url"],
+                "meta": res.get("description", ""),
+                "h1": res.get("h1_tags", [""])[0] if res.get("h1_tags") else "",
+                "content": res.get("text_content", ""),
+                "security_headers": res.get("security_headers", {}),
+                "structured_data": res.get("structured_data", []),
+                "ttfb_ms": res.get("ttfb_ms", 0),
+                "page_weight_kb": res.get("page_weight_kb", 0),
+                "has_ssr": res.get("has_ssr_content", True),
+                "is_compressed": res.get("is_compressed", False),
+                "redirect_chain": res.get("redirect_chain", []),
+                "canonical": res.get("canonical"),
+                "status_code": res.get("status_code", 200)
+            })
+
         if content_bundle["internal_pages"]:
             audited_pages = content_bundle["internal_pages"]
             metrics["avg_ttfb"] = int(sum(p.get("ttfb_ms", 0) for p in audited_pages) / len(audited_pages))
@@ -1112,10 +1141,14 @@ def analyze_url():
     
     # ── 4. High-Standard Meta-Analysis (Final Synthesis) ──────────────
     # Source of Truth calculation: Weighted average of specialized audits
-    specialist_avg = round(sum(r.get("score", 0) * r.get("weight", 0) for r in results))
+    # Null-safe sum calculation
+    specialist_avg = 0
+    if results:
+        specialist_avg = round(sum(r.get("score", 0) * r.get("weight", 0) for r in results))
     
     # We use the Strategist's Global Score as the primary authority, 
-    # but FALLBACK to specialist_avg if the master returned 0 (failsafe against blockade hallucinations)
+    # but FALLBACK to specialist_avg if the master failed or returned 0
+    master_result = master_result or {}
     master_score = master_result.get("score", 0)
     final_score = master_score if master_score > 0 else specialist_avg
     

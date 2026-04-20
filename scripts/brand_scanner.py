@@ -31,7 +31,7 @@ DEFAULT_HEADERS = {
 }
 
 # Since scraping YouTube directly can be difficult without an API key, this function provides a blueprint for an audit. It asks five critical questions:
-def check_youtube_presence(brand_name: str) -> dict:
+def check_youtube_presence(brand_name: str, external_links: list = None) -> dict:
     """Check brand presence on YouTube."""
     result = {
         "platform": "YouTube",
@@ -42,6 +42,17 @@ def check_youtube_presence(brand_name: str) -> dict:
         "search_url": f"https://www.youtube.com/results?search_query={quote_plus(brand_name)}",
         "recommendations": [],
     }
+
+    # 1. Check provided external links first (High Confidence)
+    if external_links:
+        for link in external_links:
+            url = link.get("url", "") if isinstance(link, dict) else str(link)
+            if "youtube.com" in url or "youtu.be" in url:
+                if any(x in url for x in ["/channel/", "/c/", "/user/", "/@"]):
+                    result["has_channel"] = True
+                    result["official_url"] = url
+                    result["evidence"] = f"Official YouTube link found on website: {url}"
+                    break
 
     # Note: Actual YouTube API would be used in production
     # This provides the framework for Claude Code to use WebFetch
@@ -54,14 +65,16 @@ def check_youtube_presence(brand_name: str) -> dict:
         "5. Are there positive reviews or demonstrations?",
     ]
 
-    result["recommendations"] = [
-        "Create a YouTube channel if none exists",
+    if not result["has_channel"]:
+        result["recommendations"].append("Create a YouTube channel if none exists")
+    
+    result["recommendations"].extend([
         "Publish educational/tutorial content related to your niche",
         "Encourage customers to create review/demo videos",
         "Optimize video titles and descriptions with brand name",
         "Add timestamps and chapters to improve AI parseability",
         "Include transcripts (YouTube auto-generates, but review for accuracy)",
-    ]
+    ])
 
     return result
 
@@ -69,7 +82,7 @@ def check_youtube_presence(brand_name: str) -> dict:
 # Is it always the same? Not always, but it is true 90% of the time. 
 # This is why your code includes "Search" fallbacks.
 #  If wikipedia.org/wiki/Typeform didn't exist, the script uses the Search API to find the closest match.
-def check_reddit_presence(brand_name: str) -> dict:
+def check_reddit_presence(brand_name: str, external_links: list = None) -> dict:
     """Check brand presence on Reddit."""
     result = {
         "platform": "Reddit",
@@ -81,6 +94,22 @@ def check_reddit_presence(brand_name: str) -> dict:
         "recommendations": [],
     }
 
+    # 1. Check provided external links first (High Confidence)
+    if external_links:
+        for link in external_links:
+            url = link.get("url", "") if isinstance(link, dict) else str(link)
+            if "reddit.com" in url:
+                if "/r/" in url:
+                    result["has_subreddit"] = True
+                    result["official_url"] = url
+                    result["evidence"] = f"Official Subreddit link found on website: {url}"
+                    break
+                elif "/user/" in url:
+                    result["has_official_account"] = True
+                    result["official_url"] = url
+                    result["evidence"] = f"Official Reddit User account found on website: {url}"
+                    break
+
     result["check_instructions"] = [
         f"Search Reddit for '{brand_name}' and check:",
         "1. Does the brand have its own subreddit (r/brandname)?",
@@ -91,19 +120,21 @@ def check_reddit_presence(brand_name: str) -> dict:
         "6. Are mentions recent (within last 6 months)?",
     ]
 
-    result["recommendations"] = [
-        "Monitor relevant subreddits for brand mentions",
+    if not result["has_subreddit"]:
+        result["recommendations"].append("Monitor relevant subreddits for brand mentions")
+    
+    result["recommendations"].extend([
         "Participate authentically in industry discussions (no spam)",
         "Create an official Reddit account for customer support",
         "Share valuable content (not just self-promotion)",
         "Respond to questions about your product/service category",
         "Reddit authenticity matters — don't use marketing speak",
-    ]
+    ])
 
     return result
 
 
-def check_wikipedia_presence(brand_name: str) -> dict:
+def check_wikipedia_presence(brand_name: str, external_links: list = None) -> dict:
     """Check brand/entity presence on Wikipedia and Wikidata."""
     result = {
         "platform": "Wikipedia",
@@ -117,30 +148,46 @@ def check_wikipedia_presence(brand_name: str) -> dict:
         "recommendations": [],
     }
 
-    # Check Wikipedia API (High-Precision Search)
-    try:
-        # We search specifically for the brand name followed by common entity markers
-        search_query = f"{brand_name} company"
-        api_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={quote_plus(search_query)}&format=json"
-        response = requests.get(api_url, headers=DEFAULT_HEADERS, timeout=15)
-        if response.status_code == 200:
-            data = response.json()
-            search_results = data.get("query", {}).get("search", [])
-            for res in search_results[:3]: # Check top 3 for relevance
-                title = res.get("title", "").lower()
-                clean_brand = brand_name.lower().strip()
-                
-                # Broad but accurate matching (Company names often have parentheses)
-                if clean_brand in title:
-                    result["has_wikipedia_page"] = True
-                    result["top_match_title"] = res.get("title")
-                    break
-                
-            result["wikipedia_search_results"] = len(search_results)
-    except Exception as e:
-        print(f"[DEBUG] Wikipedia API Error: {e}")
+    # 1. Check provided external links first (High Confidence)
+    if external_links:
+        for link in external_links:
+            url = link.get("url", "") if isinstance(link, dict) else str(link)
+            if "wikipedia.org/wiki/" in url:
+                result["has_wikipedia_page"] = True
+                result["official_url"] = url
+                result["evidence"] = f"Official Wikipedia link found on website: {url}"
+                break
 
-    # Check Wikidata
+    # 2. Check Wikipedia API (High-Precision Search)
+    if not result["has_wikipedia_page"]:
+        try:
+            # We search for the brand name directly first, then with "company"
+            search_queries = [brand_name, f"{brand_name} company"]
+            for search_query in search_queries:
+                api_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={quote_plus(search_query)}&format=json"
+                response = requests.get(api_url, headers=DEFAULT_HEADERS, timeout=15)
+                if response.status_code == 200:
+                    data = response.json()
+                    search_results = data.get("query", {}).get("search", [])
+                    for res in search_results[:3]: # Check top 3 for relevance
+                        title = res.get("title", "").lower()
+                        clean_brand = brand_name.lower().strip()
+                        
+                        # Broad but accurate matching (Company names often have parentheses)
+                        if clean_brand == title or (clean_brand in title and len(title) < len(clean_brand) + 15):
+                            result["has_wikipedia_page"] = True
+                            result["top_match_title"] = res.get("title")
+                            result["official_url"] = f"https://en.wikipedia.org/wiki/{quote_plus(res.get('title').replace(' ', '_'))}"
+                            break
+                    
+                    if result["has_wikipedia_page"]:
+                        break
+                        
+                result["wikipedia_search_results"] = len(search_results)
+        except Exception as e:
+            print(f"[DEBUG] Wikipedia API Error: {e}")
+
+    # 3. Check Wikidata
     try:
         wikidata_url = f"https://www.wikidata.org/w/api.php?action=wbsearchentities&search={quote_plus(brand_name)}&language=en&format=json"
         response = requests.get(wikidata_url, headers=DEFAULT_HEADERS, timeout=15)
@@ -148,9 +195,14 @@ def check_wikipedia_presence(brand_name: str) -> dict:
             data = response.json()
             entities = data.get("search", [])
             if entities:
-                result["has_wikidata_entry"] = True
-                result["wikidata_id"] = entities[0].get("id", "")
-                result["wikidata_description"] = entities[0].get("description", "")
+                # Basic relevance check for Wikidata
+                for ent in entities[:2]:
+                    desc = ent.get("description", "").lower()
+                    if any(x in desc for x in ["company", "software", "organization", "website", "brand"]):
+                        result["has_wikidata_entry"] = True
+                        result["wikidata_id"] = ent.get("id", "")
+                        result["wikidata_description"] = ent.get("description", "")
+                        break
     except Exception:
         pass
 
@@ -166,7 +218,7 @@ def check_wikipedia_presence(brand_name: str) -> dict:
     return result
 
 
-def check_linkedin_presence(brand_name: str) -> dict:
+def check_linkedin_presence(brand_name: str, external_links: list = None) -> dict:
     """Check brand presence on LinkedIn."""
     result = {
         "platform": "LinkedIn",
@@ -177,6 +229,16 @@ def check_linkedin_presence(brand_name: str) -> dict:
         "search_url": f"https://www.linkedin.com/search/results/companies/?keywords={quote_plus(brand_name)}",
         "recommendations": [],
     }
+
+    # 1. Check provided external links first (High Confidence)
+    if external_links:
+        for link in external_links:
+            url = link.get("url", "") if isinstance(link, dict) else str(link)
+            if "linkedin.com/company/" in url:
+                result["has_company_page"] = True
+                result["official_url"] = url
+                result["evidence"] = f"Official LinkedIn link found on website: {url}"
+                break
 
     result["check_instructions"] = [
         f"Search LinkedIn for '{brand_name}' and check:",
@@ -239,7 +301,7 @@ def check_other_platforms(brand_name: str) -> dict:
     return result
 
 
-def generate_brand_report(brand_name: str, domain: str = None) -> dict:
+def generate_brand_report(brand_name: str, domain: str = None, external_links: list = None) -> dict:
     """Generate a comprehensive brand mention report."""
     report = {
         "brand_name": brand_name,
@@ -251,10 +313,10 @@ def generate_brand_report(brand_name: str, domain: str = None) -> dict:
     }
 
     # Check all platforms
-    report["platforms"]["youtube"] = check_youtube_presence(brand_name)
-    report["platforms"]["reddit"] = check_reddit_presence(brand_name)
-    report["platforms"]["wikipedia"] = check_wikipedia_presence(brand_name)
-    report["platforms"]["linkedin"] = check_linkedin_presence(brand_name)
+    report["platforms"]["youtube"] = check_youtube_presence(brand_name, external_links)
+    report["platforms"]["reddit"] = check_reddit_presence(brand_name, external_links)
+    report["platforms"]["wikipedia"] = check_wikipedia_presence(brand_name, external_links)
+    report["platforms"]["linkedin"] = check_linkedin_presence(brand_name, external_links)
     report["platforms"]["other"] = check_other_platforms(brand_name)
 
     # Overall recommendations
