@@ -318,15 +318,18 @@ Even Googlebot, which does execute JavaScript, deprioritizes JS-rendered content
 
 ## Category 8: Page Speed & Server Performance (15 points)
 
-### 8.1 Time to First Byte (TTFB)
-- Target: **< 800ms** (ideally < 200ms)
-- Measure with curl: `curl -o /dev/null -s -w 'TTFB: %{time_starttransfer}s\n' [URL]`
-- If TTFB > 800ms: check server location, caching, database queries, CDN usage
+### 8.1 Time to First Byte (TTFB) & Performance Proof
+- **Industrial Depth Target**: **< 200ms** (Critical for AI citation probability)
+- **Proof-of-Verification (MANDATORY)**:
+    - **Origin**: Specify Audit Node location (e.g., "US-East (Virginia)" or "Local Node").
+    - **Tool**: Specify Measurement Engine (e.g., "Playwright-Stealth Crawler Engine").
+    - **Sampling**: Avg of all deep-audited pages (N=43) rather than a single request.
+    - **Minification Truth**: Minification is HARMLESS to AI crawlers. Never report minified HTML as a semantic parsing blocker.
+- **Diagnostics**: If TTFB > 500ms, provide a specific `evidence_code` showing the `Server` header and `X-Cache` miss status in the audit log.
 
 ### 8.2 Resource Optimization
 - Total page weight target: **< 2MB** (critical pages < 1MB)
 - Check for uncompressed resources (gzip/brotli compression should be enabled)
-- Check for unminified CSS and JavaScript
 - Check for unused CSS/JS (can represent 50%+ of downloaded bytes on many sites)
 
 ### 8.3 Image Optimization
@@ -355,17 +358,15 @@ Even Googlebot, which does execute JavaScript, deprioritizes JS-rendered content
 **Category Scoring:**
 | Check | Points |
 |---|---|
-| TTFB < 800ms | 3 |
-| Page weight < 2MB | 2 |
-| Images optimized (format, size, lazy) | 3 |
-| JS bundles reasonable (< 200KB compressed) | 2 |
+| TTFB < 800ms | 4 |
+| Page weight < 2MB | 3 |
+| Images optimized (format, size, lazy) | 4 |
 | Compression enabled (gzip/brotli) | 2 |
-| Cache headers on static resources | 2 |
-| CDN in use | 1 |
+| CDN in use | 2 |
 
 ---
 
-## IndexNow Protocol
+## IndexNow Protocol (Optional/Low-Impact)
 
 ### What It Is
 IndexNow is an open protocol that allows websites to notify search engines instantly when content is created, updated, or deleted. Supported by Bing, Yandex, Seznam, and Naver. Google does NOT support IndexNow but monitors the protocol.

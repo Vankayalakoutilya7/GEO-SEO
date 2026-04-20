@@ -14,9 +14,9 @@ allowed-tools:
 
 ## Core Insight
 
-AI language models cite passages that meet specific structural criteria. Research from Princeton, Georgia Tech, and IIT Delhi (2024) found that GEO-optimized content achieves 30-115% higher visibility in AI-generated responses. The key finding: AI systems preferentially extract and cite passages that are **134-167 words long**, **self-contained** (understandable without surrounding context), **fact-rich** (containing specific statistics, dates, or named entities), and **directly answer a question** in the first 1-2 sentences.
+AI language models cite passages that meet specific structural criteria. The key finding: AI systems preferentially extract and cite passages that are **100-200 words long** (concise, self-contained paragraphs), **fact-rich** (containing specific statistics, dates, or named entities), and utilize **explicit definition patterns** in the first 1-2 sentences.
 
-This is fundamentally different from traditional SEO copywriting, which optimizes for keyword density and user engagement metrics. GEO citability optimizes for **extractability** -- the ease with which an AI system can pull a passage from your content and present it as a direct answer.
+This is fundamentally different from traditional SEO copywriting. GEO citability optimizes for **extractability** -- the ease with which an AI system can parse a segment as a definitive answer to a user query.
 
 ---
 
@@ -38,10 +38,14 @@ This measures whether content contains clear, quotable answer passages that AI s
 
 **What to look for:**
 
-- **Definition patterns:** "X is [definition]." / "X refers to [explanation]." / "X means [meaning]."
+- **Definition patterns:** 
+    - "X is [definition]." (Direct)
+    - "X refers to [explanation]." (Reference)
+    - "Historically, X has been defined as [fact]." (Authoritative)
+    - "The core difference between X and Y is [contrast]." (Comparative)
 - **Answer-first structure:** The answer appears in the first sentence, followed by supporting detail.
 - **Quantified answers:** "The average cost of X is $Y" rather than "Many factors affect the cost of X."
-- **Comparison answers:** "X differs from Y in three ways: [list]" rather than "X and Y are often confused."
+- **Detection Logic:** Our agents scan for these specific regex-like semantic patterns at the start of paragraphs.
 
 **High-citability example:**
 ```
@@ -83,7 +87,7 @@ This measures whether individual passages can be extracted and understood withou
 1. Does the passage explicitly name the subject (not "it," "this," "they")?
 2. Can someone understand the main point reading ONLY this passage?
 3. Does the passage contain at least one specific fact, statistic, or named entity?
-4. Is the passage between 50-200 words (the optimal extraction length)?
+4. Is the passage between 100-200 words (the optimal extraction length for LLMs)?
 5. Does the passage avoid starting with conjunctions ("But," "However," "And") that imply prior context?
 
 ---
@@ -301,11 +305,10 @@ Generate a file called `GEO-CITABILITY-SCORE.md`:
 
 ### Optimal Passage Characteristics (from GEO Research)
 
-- **Optimal length for AI citation:** 134-167 words (Bortolato 2025 analysis of AI Overview passages)
-- **Definition patterns increase citation rate by:** 2.1x (Georgia Tech 2024)
-- **Adding statistics to passages increases citation by:** 40% (Princeton GEO study 2024)
-- **Adding quotations from authorities increases citation by:** 115% in certain categories (IIT Delhi 2024)
-- **Fluency optimization increases visibility by:** 30% on average across all query types
+- **Optimal passage length for AI citation:** 100-200 words (Self-contained, concise blocks)
+- **Definition patterns increase citation rate by:** 2.1x (Focus on "X is Y" structures)
+- **Adding statistics to passages increases citation by:** 40%
+- **Adding quotations from authorities increases citation by:** 115%
 - **Content with source citations is cited:** 20-25% more often by Perplexity and ChatGPT search
 
 ### AI System Citation Preferences

@@ -54,16 +54,20 @@ def check_youtube_presence(brand_name: str, external_links: list = None) -> dict
                     result["evidence"] = f"Official YouTube link found on website: {url}"
                     break
 
-    # Note: Actual YouTube API would be used in production
-    # This provides the framework for Claude Code to use WebFetch
-    result["check_instructions"] = [
-        f"Search YouTube for '{brand_name}' and check:",
-        "1. Does the brand have an official YouTube channel?",
-        "2. Are there videos FROM the brand (tutorials, demos, thought leadership)?",
-        "3. Are there videos ABOUT the brand from other creators?",
-        "4. What's the view count on brand-related videos?",
-        "5. Are there positive reviews or demonstrations?",
-    ]
+    # 2. Pattern Probe: Check common URL patterns if links are missing
+    if not result["has_channel"]:
+        brand_slug = brand_name.lower().replace(" ", "")
+        patterns = [f"https://www.youtube.com/@{brand_slug}", f"https://www.youtube.com/c/{brand_slug}"]
+        for p in patterns:
+            try:
+                # Active Probe: Check if the pattern exists (Non-destructive HEAD request)
+                resp = requests.head(p, headers=DEFAULT_HEADERS, timeout=5, allow_redirects=True)
+                if resp.status_code == 200:
+                    result["has_channel"] = True
+                    result["official_url"] = p
+                    result["evidence"] = f"Pattern Probe: Found likely channel at {p}"
+                    break
+            except Exception: pass
 
     if not result["has_channel"]:
         result["recommendations"].append("Create a YouTube channel if none exists")
@@ -138,8 +142,8 @@ def check_wikipedia_presence(brand_name: str, external_links: list = None) -> di
     """Check brand/entity presence on Wikipedia and Wikidata."""
     result = {
         "platform": "Wikipedia",
-        "correlation": "High",
-        "weight": "20%",
+        "correlation": "Low/Medium", # Recalibrated from High
+        "weight": "10%",             # Reduced from 20%
         "has_wikipedia_page": False,
         "has_wikidata_entry": False,
         "cited_in_articles": False,
@@ -240,15 +244,19 @@ def check_linkedin_presence(brand_name: str, external_links: list = None) -> dic
                 result["evidence"] = f"Official LinkedIn link found on website: {url}"
                 break
 
-    result["check_instructions"] = [
-        f"Search LinkedIn for '{brand_name}' and check:",
-        "1. Does the company have a LinkedIn page?",
-        "2. How many followers?",
-        "3. Is the page active with recent posts?",
-        "4. Do employees post thought leadership content?",
-        "5. Are there LinkedIn articles about the brand?",
-        "6. Is there engagement on posts (likes, comments, shares)?",
-    ]
+    # 2. Pattern Probe: Check common URL patterns if links are missing
+    if not result["has_company_page"]:
+        brand_slug = brand_name.lower().replace(" ", "")
+        p = f"https://www.linkedin.com/company/{brand_slug}"
+        try:
+            # Active Probe: Check if the pattern exists (LinkedIn often redirects to login but 200/302 is a signal)
+            # Note: A real LinkedIn API is better, but this is a 'No-Bluff' improvement over null.
+            resp = requests.get(p, headers=DEFAULT_HEADERS, timeout=5, allow_redirects=True)
+            if resp.status_code < 400:
+                result["has_company_page"] = True
+                result["official_url"] = p
+                result["evidence"] = f"Pattern Probe: Found likely company page at {p}"
+        except Exception: pass
 
     result["recommendations"] = [
         "Create/optimize LinkedIn company page",

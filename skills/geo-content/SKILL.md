@@ -57,12 +57,11 @@ Demonstrated knowledge depth and professional competence in the subject matter.
 
 | Signal | Points | How to Score |
 |---|---|---|
-| Author credentials visible (bio, degrees, certifications) | 5 | 5 if full credentials, 3 if basic bio, 0 if no author |
-| Technical depth appropriate to topic | 5 | 5 if thorough technical treatment, 3 if adequate, 0 if superficial |
-| Methodology explanation (how conclusions were reached) | 4 | 4 if clear methodology, 2 if some explanation, 0 if none |
-| Data-backed claims (statistics, research citations) | 4 | 4 if well-sourced, 2 if some data, 0 if unsupported claims |
-| Industry-specific terminology used correctly | 3 | 3 if accurate specialized language, 1 if basic, 0 if errors |
-| Author page with detailed professional background | 4 | 4 if dedicated author page, 2 if brief bio, 0 if none |
+| Visible Credentials Above Fold (Author Bio, Specs) | 6 | 6 if prominent bio/title, 3 if sidebar/footer, 0 if none |
+| Expert Quote Density (>10% density) | 6 | 6 if 1+ expert quote per 500 words, 3 if generic, 0 if none |
+| Methodology/Proof Logic (How we tested) | 5 | 5 if clear technical process, 2 if vague, 0 if none |
+| Industry-Specific Citations (Peer-reviewed/News) | 5 | 5 if reputable external links, 2 if internal only, 0 if none |
+| Author Topical Authority (LinkedIn/Academic) | 3 | 3 if authoritative links found, 0 if unknown |
 
 **What to flag as weak Expertise:**
 - Claims without supporting evidence or sources
@@ -78,13 +77,11 @@ Recognition by others as a credible source on the topic.
 
 | Signal | Points | How to Score |
 |---|---|---|
-| Inbound citations from authoritative sources | 5 | 5 if cited by major sources, 3 if some citations, 0 if none |
-| Author quoted or cited in press/media | 4 | 4 if media mentions, 2 if industry mentions, 0 if none |
-| Industry awards or recognition mentioned | 3 | 3 if relevant awards, 1 if tangential, 0 if none |
-| Speaker credentials (conferences, events) | 3 | 3 if listed, 0 if none |
-| Published in peer-reviewed or respected outlets | 4 | 4 if tier-1 publications, 2 if industry outlets, 0 if none |
-| Comprehensive topic coverage (topical authority) | 3 | 3 if site covers topic thoroughly, 1 if some coverage, 0 if isolated |
-| Brand mentioned on Wikipedia or authoritative references | 3 | 3 if Wikipedia, 2 if other encyclopedic refs, 0 if none |
+| Citations from .edu / .gov or Tier-1 Media | 6 | 6 if top-tier refs, 3 if generic, 0 if none |
+| Brand Mentioned in Independent Comparison Guides | 6 | 6 if on 3+ listicles/Roundups, 3 if 1, 0 if none |
+| Industry Benchmark Recognition (Awards/Press) | 5 | 5 if specific proof, 2 if general, 0 if none |
+| Presence in Industry Authority "Topic Clusters" | 5 | 5 if linked from niche leaders, 2 if random, 0 if none |
+| Entity verification (Wikidata/LinkedIn/Crunchbase) | 3 | 3 if verified entities found, 0 if none |
 
 **What to flag as weak Authoritativeness:**
 - Single-topic site with no depth of coverage
@@ -149,10 +146,10 @@ These are **floors, not targets**. More words does not mean better content. The 
 AI platforms extract content at the paragraph level. Each paragraph should be a self-contained unit of meaning.
 
 **Optimal paragraph structure:**
-- **2-4 sentences** per paragraph (1-sentence paragraphs are weak; 5+ sentences are hard to extract)
-- **One idea per paragraph** — do not mix topics within a paragraph
-- **Lead with the key claim** — first sentence should contain the main point
-- **Support with evidence** — remaining sentences provide data, examples, or context
+- **2-4 sentences** per paragraph (Optimized AI extraction segment)
+- **One idea per paragraph** — do not mix topics for segment isolation
+- **Lead with the Pattern** — first sentence should use "X is Y" or specific data
+- **Expert Quote/Evidence** — include a specific quote or statistic in the block
 - **Quotable standalone** — each paragraph should make sense if extracted in isolation
 
 ### Heading Structure

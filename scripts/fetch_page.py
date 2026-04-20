@@ -194,10 +194,26 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
         # Structured data (JSON-LD) — extract before decompose() mutates the tree
         for script in soup.find_all("script", type="application/ld+json"):
             try:
-                data = json.loads(script.string)
-                result["structured_data"].append(data)
+                # Use get_text() to handle internal comments or malformed whitespace
+                script_content = script.get_text(strip=True)
+                if not script_content and script.string:
+                    script_content = script.string.strip()
+                
+                if script_content:
+                    data = json.loads(script_content)
+                    result["structured_data"].append(data)
             except (json.JSONDecodeError, TypeError):
                 result["errors"].append("Invalid JSON-LD detected")
+
+        # Microdata Fallback (For Entity Hints)
+        microdata_items = soup.find_all(attrs={"itemtype": True})
+        if microdata_items:
+            result["structured_data"].append({
+                "@context": "https://schema.org",
+                "@type": "MicrodataDiscovery",
+                "types_found": list(set([item.get("itemtype") for item in microdata_items])),
+                "count": len(microdata_items)
+            })
 
         # SSR check — must run BEFORE decompose() mutates the tree
         js_app_roots = soup.find_all(
@@ -236,7 +252,54 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
             element.decompose()
         text = soup.get_text(separator=" ", strip=True)
         result["text_content"] = text
-        result["word_count"] = len(text.split())
+        word_count = len(text.split())
+        # Standardize for Industrial GEO (No fake precision)
+        # Force rounding to nearest 100 or 'Sparse' if very low
+        if word_count < 100:
+            result["word_count"] = "Sparse (<100)"
+        else:
+            result["word_count"] = f"~{ (word_count // 100) * 100 }"
+
+        # --- INDUSTRIAL SCHEMA DISCOVERY ---
+        # Explicit flags for high-priority SaaS schemas
+        schema_types = [s.get("@type") for s in result.get("structured_data", []) if isinstance(s, dict)]
+        result["high_priority_schema"] = {
+            "organization_found": "Organization" in schema_types or "Corp" in str(schema_types),
+            "product_found": "Product" in schema_types or "SoftwareApplication" in schema_types,
+            "faq_found": "FAQPage" in schema_types
+        }
+
+        # --- INDUSTRIAL EVIDENCE BANK ---
+        # Collect raw snippets for 'No-Bluff' reporting
+        evidence_bank = []
+        definition_patterns = [
+            r"is a [a-zA-Z\s]+ that", 
+            r"refers to the [a-zA-Z\s]+", 
+            r"defined as [a-zA-Z\s]+",
+            r"is the process of",
+            r"is a platform for"
+        ]
+        
+        # 1. Definition Evidence
+        for pattern in definition_patterns:
+            matches = list(re.finditer(pattern, text, re.I))
+            for m in matches[:3]: # Cap at 3 for token efficiency
+                start = max(0, m.start() - 50)
+                end = min(len(text), m.end() + 100)
+                evidence_bank.append({
+                    "type": "DEFINITION",
+                    "snippet": f"...{text[start:end]}...",
+                    "pattern": pattern
+                })
+        
+        # 2. Schema Anchor Evidence (Raw JSON fragment)
+        if result.get("structured_data"):
+            evidence_bank.append({
+                "type": "SCHEMA",
+                "snippet": str(result["structured_data"])[:200] + "..."
+            })
+            
+        result["evidence_bank"] = evidence_bank
 
         # Images
         for img in soup.find_all("img"):
@@ -350,10 +413,19 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                 
                 # Final content capture logic
                 if len(rendered_text) > len(result["text_content"]) * 1.2 or (not result["text_content"] and len(rendered_text) > 200) or len(result.get("internal_links", [])) == 0:
+                    # SSR VALIDATION PROOF: Calculated ratio of raw to rendered text
+                    raw_len = len(result.get("text_content", ""))
+                    rend_len = len(rendered_text)
+                    result["ssr_efficiency_ratio"] = round(raw_len / rend_len, 2) if rend_len > 0 else 0
+                    
                     result["has_ssr_content"] = False
-                    result["rendering_wall_detected"] = True
+                    result["rendering_wall_detected"] = True if result["ssr_efficiency_ratio"] < 0.3 else False
                     result["text_content"] = rendered_text
-                    result["word_count"] = len(rendered_text.split())
+                    
+                    # Standardize Word Count for Rendered Content
+                    r_word_count = len(rendered_text.split())
+                    result["word_count"] = f"{ (r_word_count // 50) * 50 }+" if r_word_count > 50 else r_word_count
+                    
                     result["title"] = rendered_soup.title.string if rendered_soup.title else result["title"]
                     
                     # RE-EXTRACT LINKS FROM RENDERED CONTENT
@@ -377,12 +449,26 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                         elif parsed_href.scheme in ("http", "https"):
                             result["external_links"].append({"url": href, "text": link_text})
                             
-                    # RE-EXTRACT STRUCTURED DATA
+                    # RE-EXTRACT STRUCTURED DATA (Hardened Path)
                     for script in rendered_soup.find_all("script", type="application/ld+json"):
                         try:
-                            data = json.loads(script.string)
-                            result["structured_data"].append(data)
+                            script_content = script.get_text(strip=True)
+                            if not script_content and script.string:
+                                script_content = script.string.strip()
+                            if script_content:
+                                data = json.loads(script_content)
+                                result["structured_data"].append(data)
                         except: pass
+                    
+                    # Hardened Microdata extraction for Playwright
+                    p_microdata = rendered_soup.find_all(attrs={"itemtype": True})
+                    if p_microdata:
+                        result["structured_data"].append({
+                            "@context": "https://schema.org",
+                            "@type": "MicrodataDiscovery",
+                            "types_found": list(set([item.get("itemtype") for item in p_microdata])),
+                            "count": len(p_microdata)
+                        })
                 
                 browser.close()
         except Exception as e:
@@ -683,8 +769,8 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
                 for link in soup.find_all("a", href=True):
                     href = urljoin(url, link["href"])
                     href = href.split("#")[0].rstrip("/")
-                    parsed_href = urlparse(href)
-                    if base_domain in parsed_href.netloc.replace("www.", ""):
+                    
+                    if is_internal(href, url, allowed_domains={base_domain}):
                         links.append(href)
                 
                 return list(set(links)), cookies
@@ -704,9 +790,8 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
             for link in soup.find_all("a", href=True):
                 href = urljoin(url, link["href"])
                 href = href.split("#")[0].rstrip("/")
-                parsed_href = urlparse(href)
-                # Check if it's an internal link
-                if base_domain in parsed_href.netloc.replace("www.", ""):
+                
+                if is_internal(href, url, allowed_domains={base_domain}):
                     links.append(href)
     except Exception:
         pass
@@ -744,10 +829,9 @@ def recursive_bfs_crawl(url: str, max_pages: int = 3000, timeout: int = 15, sess
     if res and res.get("internal_links"):
         for link in res["internal_links"]:
             l_url = link["url"].split("#")[0].rstrip("/")
-            l_host = urlparse(l_url).netloc.replace("www.", "")
             
-            # Match against ANY domain in our allowed set
-            if any(domain in l_host or l_host in domain for domain in allowed_domains):
+            # Match against ANY domain in our allowed set or fuzzy root
+            if is_internal(l_url, url, allowed_domains=allowed_domains):
                 if l_url not in visited:
                     visited.add(l_url)
                     discovered.append(l_url)
@@ -769,14 +853,14 @@ def recursive_bfs_crawl(url: str, max_pages: int = 3000, timeout: int = 15, sess
             batch = queue[:10]
             queue = queue[10:]
             
-            future_to_url = {executor.submit(fast_extract_links, u, base_domain, timeout, session=actual_session): u for u in batch}
+            future_to_url = {executor.submit(fast_extract_links, u, seed_host, timeout, session=actual_session): u for u in batch}
             for future in concurrent.futures.as_completed(future_to_url):
                 try:
                     new_links, _ = future.result()
                     for link in new_links:
                         if link not in visited:
-                            l_host = urlparse(link).netloc.replace("www.", "")
-                            if base_domain in l_host or l_host in base_domain:
+                            # Use is_internal to support fuzzy domain matching
+                            if is_internal(link, url, allowed_domains=allowed_domains):
                                 visited.add(link)
                                 discovered.append(link)
                                 queue.append(link)

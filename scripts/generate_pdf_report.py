@@ -379,13 +379,8 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
     schema_score = scores.get("schema", 0)
     platform_optimization = scores.get("platform_optimization", 0)
 
-    platforms = data.get("platforms", {
-        "Google AI Overviews": 0,
-        "ChatGPT": 0,
-        "Perplexity": 0,
-        "Gemini": 0,
-        "Bing Copilot": 0,
-    })
+    # Unified AI Readiness Score (Calculated by Claude)
+    ai_readiness_score = data.get("ai_readiness_score", 0)
 
     crawlers = data.get("crawlers", [])
     findings = data.get("findings", [])
@@ -533,130 +528,6 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
     elements.append(PageBreak())
 
     # ============================================================
-    # AI PLATFORM READINESS
-    # ============================================================
-    elements.append(Paragraph("AI Platform Readiness", styles['SectionHeader']))
-    elements.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
-
-    elements.append(Paragraph(
-        "These scores reflect how likely your content is to be cited by each AI search platform. "
-        "A score below 50 indicates significant barriers to citation on that platform.",
-        styles['BodyText_Custom']
-    ))
-    elements.append(Spacer(1, 10))
-
-    # Platform chart
-    if platforms:
-        elements.append(create_platform_chart(platforms))
-
-    elements.append(Spacer(1, 10))
-
-    # Platform table
-    platform_table_data = [["AI Platform", "Score", "Status"]]
-    for name, score in platforms.items():
-        status = get_score_label(score)
-        platform_table_data.append([name, f"{score}/100", status])
-
-    pt = Table(platform_table_data, colWidths=[180, 80, 150])
-    pt_style = make_table_style()
-    for i in range(1, len(platform_table_data)):
-        score_val = int(platform_table_data[i][1].split("/")[0])
-        color = get_score_color(score_val)
-        pt_style.add('TEXTCOLOR', (1, i), (1, i), color)
-    pt.setStyle(pt_style)
-    elements.append(pt)
-
-    elements.append(PageBreak())
-
-    # ============================================================
-    # AI CRAWLER ACCESS
-    # ============================================================
-    elements.append(Paragraph("AI Crawler Access Status", styles['SectionHeader']))
-    elements.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
-
-    elements.append(Paragraph(
-        "Blocking AI crawlers prevents AI platforms from citing your content. "
-        "The table below shows which AI crawlers can currently access your site.",
-        styles['BodyText_Custom']
-    ))
-    elements.append(Spacer(1, 8))
-
-    if crawler_access:
-        # Use Paragraph objects for text wrapping in cells
-        cell_style = ParagraphStyle(
-            'CrawlerCell', fontName='Helvetica', fontSize=9,
-            textColor=TEXT_PRIMARY, leading=12,
-        )
-        header_cell_style = ParagraphStyle(
-            'CrawlerHeaderCell', fontName='Helvetica-Bold', fontSize=9,
-            textColor=WHITE, leading=12,
-        )
-        status_style_allowed = ParagraphStyle(
-            'StatusAllowed', fontName='Helvetica-Bold', fontSize=9,
-            textColor=SUCCESS, leading=12,
-        )
-        status_style_blocked = ParagraphStyle(
-            'StatusBlocked', fontName='Helvetica-Bold', fontSize=9,
-            textColor=DANGER, leading=12,
-        )
-        status_style_restricted = ParagraphStyle(
-            'StatusRestricted', fontName='Helvetica-Bold', fontSize=9,
-            textColor=WARNING, leading=12,
-        )
-        status_style_default = ParagraphStyle(
-            'StatusDefault', fontName='Helvetica', fontSize=9,
-            textColor=TEXT_PRIMARY, leading=12,
-        )
-
-        crawler_data = [[
-            Paragraph("Crawler", header_cell_style),
-            Paragraph("Platform", header_cell_style),
-            Paragraph("Status", header_cell_style),
-            Paragraph("Recommendation", header_cell_style),
-        ]]
-        for crawler_name, info in crawler_access.items():
-            if isinstance(info, dict):
-                status_text = info.get("status", "Unknown")
-                status_upper = status_text.upper()
-                if "ALLOW" in status_upper:
-                    s_style = status_style_allowed
-                elif "BLOCK" in status_upper:
-                    s_style = status_style_blocked
-                elif "RESTRICT" in status_upper:
-                    s_style = status_style_restricted
-                else:
-                    s_style = status_style_default
-
-                crawler_data.append([
-                    Paragraph(crawler_name, cell_style),
-                    Paragraph(info.get("platform", ""), cell_style),
-                    Paragraph(status_text, s_style),
-                    Paragraph(info.get("recommendation", ""), cell_style),
-                ])
-            else:
-                crawler_data.append([
-                    Paragraph(crawler_name, cell_style),
-                    Paragraph("", cell_style),
-                    Paragraph(str(info), cell_style),
-                    Paragraph("", cell_style),
-                ])
-
-        # Full page width: letter (612pt) - 50pt margins each side = 512pt
-        ct = Table(crawler_data, colWidths=[90, 110, 72, 240])
-        ct_style = make_table_style()
-        ct_style.add('VALIGN', (0, 0), (-1, -1), 'TOP')
-
-        ct.setStyle(ct_style)
-        elements.append(ct)
-    else:
-        elements.append(Paragraph(
-            "<i>Run /geo crawlers to populate this section with AI crawler access data.</i>",
-            styles['BodyText_Custom']
-        ))
-
-    elements.append(PageBreak())
-
-    # ============================================================
     # KEY FINDINGS
     # ============================================================
     elements.append(Paragraph("Key Findings", styles['SectionHeader']))
@@ -700,10 +571,19 @@ def generate_report(data, output_path="GEO-REPORT.pdf"):
                     safe_rl = html.escape(rl)
                     elements.append(Paragraph(safe_rl, styles['Recommendation']))
                 
-                # Add Evidence URL if present
+                # Add Evidence URL and Snippet if present
                 if finding.get("evidence_url"):
-                    elements.append(Paragraph(f"<b>Evidence:</b> {finding['evidence_url']}", styles['SmallText']))
-            elements.append(Spacer(1, 8))
+                    elements.append(Paragraph(f"<b>Source:</b> {finding['evidence_url']}", styles['SmallText']))
+                
+                if finding.get("evidence_snippet"):
+                    elements.append(Spacer(1, 4))
+                    snippet = html.escape(finding["evidence_snippet"])
+                    # Wrap in a code-like block for the PDF
+                    elements.append(Paragraph(
+                        f"<b>Technical Evidence Log:</b><br/><i>{snippet}</i>",
+                        styles['SmallText']
+                    ))
+            elements.append(Spacer(1, 10))
     else:
         elements.append(Paragraph(
             "<i>Run a full /geo audit to populate findings.</i>",
