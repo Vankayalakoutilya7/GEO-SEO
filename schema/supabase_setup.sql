@@ -37,18 +37,27 @@ CREATE TABLE IF NOT EXISTS agent_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Enable Row Level Security (RLS) - Optional: Adjust as needed for your app
+-- 4. Enable Row Level Security (RLS)
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_logs ENABLE ROW LEVEL SECURITY;
 
--- Create policies for public access (for testing, adjust for production)
-CREATE POLICY "Allow public select on projects" ON projects FOR SELECT USING (true);
-CREATE POLICY "Allow public insert on projects" ON projects FOR INSERT WITH CHECK (true);
+-- 4.1 Projects Policies
+CREATE POLICY "Allow authenticated select on projects" ON projects FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated insert on projects" ON projects FOR INSERT TO authenticated WITH CHECK (true);
+-- Restricted: No public DELETE or UPDATE on projects via API
 
-CREATE POLICY "Allow public select on audits" ON audits FOR SELECT USING (true);
-CREATE POLICY "Allow public insert on audits" ON audits FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update on audits" ON audits FOR UPDATE USING (true);
+-- 4.2 Audits Policies
+CREATE POLICY "Allow authenticated select on audits" ON audits FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated insert on audits" ON audits FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated update on audits" ON audits FOR UPDATE TO authenticated 
+USING (true) 
+WITH CHECK (status IN ('RUNNING', 'COMPLETED', 'FAILED', 'PARTIAL'));
 
-CREATE POLICY "Allow public select on agent_logs" ON agent_logs FOR SELECT USING (true);
-CREATE POLICY "Allow public insert on agent_logs" ON agent_logs FOR INSERT WITH CHECK (true);
+-- 4.3 Agent Logs Policies
+CREATE POLICY "Allow authenticated select on agent_logs" ON agent_logs FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated insert on agent_logs" ON agent_logs FOR INSERT TO authenticated WITH CHECK (true);
+-- Restricted: Agent logs are immutable once written
 
 -- 5. Storage Buckets
 -- Note: You must create the 'reports' bucket manually in the Supabase Dashboard
