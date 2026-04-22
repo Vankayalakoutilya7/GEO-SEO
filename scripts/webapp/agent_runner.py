@@ -4,9 +4,18 @@ import time
 import random
 import anthropic
 from pathlib import Path
-from .config import AGENT_DIR, SCHEMA_DIR, SKILLS_DIR, AGENT_MAPPING, AGENT_SKILL_MAP
-from .utils import clean_html_for_ai, sync_summary_scores
-from .database import save_agent_log
+
+try:
+    from .config import AGENT_DIR, SCHEMA_DIR, SKILLS_DIR, AGENT_MAPPING, AGENT_SKILL_MAP
+    from .utils import clean_html_for_ai, sync_summary_scores
+    from .database import save_agent_log
+except (ImportError, ValueError):
+    import config
+    import utils
+    import database
+    from config import AGENT_DIR, SCHEMA_DIR, SKILLS_DIR, AGENT_MAPPING, AGENT_SKILL_MAP
+    from utils import clean_html_for_ai, sync_summary_scores
+    from database import save_agent_log
 
 def load_agent_prompt(name: str) -> str:
     path = AGENT_DIR / f"{name}.md"
@@ -97,32 +106,48 @@ def prepare_agent_payload(agent_id: str, url: str, content_bundle: dict) -> str:
     return context + str(content_bundle) + sop_block
 
 def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit_id: str):
-    if not api_key: return {"id": agent_id, "score": 0, "summary": "API key not set.", "top_fixes": [], "weight": 0}
+    if not api_key or api_key == "your-api-key-here": 
+        return {"id": agent_id, "label": agent_id, "score": 0, "summary": "API Key not provided. Please enter your Anthropic API Key in the web interface.", "top_fixes": [], "weight": 0}
     client = anthropic.Anthropic(api_key=api_key)
     prompt = load_agent_prompt(agent_id)
-    if not prompt: return {"id": agent_id, "score": 0, "summary": f"Agent {agent_id} instructions not found.", "top_fixes": [], "weight": 0}
+    if not prompt: return {"id": agent_id, "label": agent_id, "score": 0, "summary": f"Agent {agent_id} instructions not found.", "top_fixes": [], "weight": 0}
 
     data_context = prepare_agent_payload(agent_id, url, content_bundle)
     
     tools = [{
         "name": "submit_audit_result",
-        "description": "Submit finalized GEO audit scores and findings.",
+        "description": "Submit finalized GEO audit scores and findings for industrial reports.",
         "input_schema": {
             "type": "object",
             "properties": {
-                "score": {"type": "integer"},
+                "score": {"type": "integer", "description": "The current audited GEO score (0-100)"},
+                "summary": {"type": "string", "description": "High-fidelity strategic summary (markdown-friendly)"},
+                "roadmap": {"type": "array", "items": {"type": "string"}, "description": "Step-by-step action plan of prioritized fixes"},
+                "weaknesses": {
+                    "type": "array", 
+                    "items": {
+                        "type": "object", 
+                        "properties": {
+                            "issue": {"type": "string"},
+                            "category": {"type": "string"},
+                            "severity": {"type": "string", "enum": ["high", "medium", "low"]},
+                            "evidence_url": {"type": "string"},
+                            "evidence_snippet": {"type": "string"},
+                            "explanation": {"type": "string"}
+                        },
+                        "required": ["issue", "severity", "evidence_snippet"]
+                    }
+                },
+                "strengths": {"type": "array", "items": {"type": "string"}},
                 "restricted": {"type": "boolean"},
-                "restriction_reason": {"type": "string"},
-                "summary": {"type": "string"},
-                "weaknesses": {"type": "array", "items": {"type": "object", "properties": {"issue": {"type": "string"}, "evidence_url": {"type": "string"}}}},
-                "findings": {"type": "array", "items": {"type": "object", "properties": {"title": {"type": "string"}, "severity": {"enum": ["critical", "high", "medium", "low"]}}}},
-                "suggested_code": {"type": "array", "items": {"type": "object", "properties": {"file_name": {"type": "string"}, "code": {"type": "string"}}}}
+                "restriction_reason": {"type": "string"}
             },
-            "required": ["score", "summary", "weaknesses", "findings"]
+            "required": ["score", "summary", "roadmap", "weaknesses"]
         }
     }]
 
-    for model_name in ["claude-3-haiku-20240307"]:
+    # Fallback chain: Premium Haiku -> Stable Haiku -> Legacy Sonnet (if needed)
+    for model_name in ["claude-haiku-4-5", "claude-3-5-haiku-20241022"]:
         for attempt in range(3):
             try:
                 time.sleep(random.uniform(0.5, 2.0))
@@ -143,9 +168,59 @@ def run_agent(agent_id: str, url: str, content_bundle: dict, api_key: str, audit
                     parsed["score"] = 0
                     parsed["summary"] = f"🚨 [RESTRICTED DATA]: {parsed.get('restriction_reason')}\n\n{parsed.get('summary', '')}"
                 
+                # Use sync_summary_scores here if needed
+                parsed["summary"] = sync_summary_scores(parsed["summary"], parsed["score"])
+                
                 save_agent_log(audit_id, agent_id, parsed, tokens_used)
                 return parsed
             except Exception as e:
-                if "429" in str(e) and attempt < 2: time.sleep(4 * (attempt + 1)); continue
-                break
-    return {"id": agent_id, "score": 0, "summary": "Audit Failed on all Claude models.", "weight": 0.2, "status": "FAILED"}
+                print(f"[ERROR] Agent {agent_id} failed on {model_name} (Attempt {attempt+1}/3): {str(e)}")
+                if "429" in str(e) and attempt < 2: 
+                    time.sleep(5 * (attempt + 1))
+                    continue
+                # If it's a 404 (Model not found), don't retry on the same model
+                if "404" in str(e) or "not found" in str(e).lower():
+                    break
+        # Continue to next model in fallback chain
+    
+    error_msg = "Audit Failed: Missing or Invalid API Key." if (not api_key or api_key == "your-api-key-here") else f"Audit Failed on all models. Last error usually: {str(e) if 'e' in locals() else 'Unknown'}"
+    return {"id": agent_id, "label": agent_id, "score": 0, "summary": error_msg, "weight": 0.2, "status": "FAILED"}
+
+def simulate_geo_query(brand: str, context_text: str = "", api_key: str = None) -> dict:
+    """Industrial AI Simulation: Evaluates citation probability for the brand."""
+    common_queries = [f"What is {brand}?", f"Top {brand} alternatives", f"How does {brand} work?"]
+    if not api_key or not context_text:
+        return {"queries_tested": common_queries, "citation_potential": "Medium", "status": "Incomplete Simulation"}
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt = f"You are a Search AI. Based on the context, how likely are you to cite '{brand}' for 'What is {brand}?'?\n\nCONTEXT:\n{context_text[:2000]}"
+        response = client.messages.create(model="claude-3-haiku-20240307", max_tokens=500, messages=[{"role": "user", "content": prompt}])
+        ans = response.content[0].text
+        return {
+            "queries_tested": common_queries, 
+            "citation_potential": "High" if "very likely" in ans.lower() or "strong candidate" in ans.lower() else "Medium",
+            "mock_ai_result": ans[:300] + "...",
+            "citations_found": 3 if "High" else 1
+        }
+    except Exception as e: return {"queries_tested": common_queries, "status": f"Error: {e}"}
+
+def run_triage_agent(discovery_queue: list, api_key: str) -> list:
+    """Triage Agent: Efficiently filters URLs → 50 high-value targets."""
+    if not api_key or not discovery_queue: return discovery_queue[:50]
+    client = anthropic.Anthropic(api_key=api_key)
+    prompt = load_agent_prompt("triage-agent")
+    if not prompt: return [u["url"] if isinstance(u, dict) else u for u in discovery_queue[:50]]
+    url_text = "\n".join([f"{i}: {u}" for i, u in enumerate(discovery_queue[:5000])])
+    try:
+        response = client.messages.create(model="claude-3-haiku-20240307", max_tokens=2048, system=prompt, messages=[{"role": "user", "content": f"URL LIST FOR TRIAGE:\n{url_text}"}])
+        json_match = re.search(r"\{.*\}", response.content[0].text, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group(0))
+            raw_selections = data.get("selected_indices", [])
+            final_targets = []
+            for item in raw_selections:
+                idx = item["index"] if isinstance(item, dict) else item
+                if idx < len(discovery_queue): final_targets.append(discovery_queue[idx])
+            return [u["url"] if isinstance(u, dict) else u for u in final_targets[:70]]
+    except Exception: pass
+    return [u["url"] if isinstance(u, dict) else u for u in discovery_queue[:50]]

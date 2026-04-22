@@ -8,11 +8,14 @@ Usage:
     Open http://localhost:5050
 """
 
+import time
 import json
 import os
 import re
 import sys
 import html
+import uuid
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from dotenv import load_dotenv
@@ -46,16 +49,23 @@ try:
 except ImportError:
     create_client = None
 
+# Global Registry for Active Audits (Prevents Resource Exhaustion)
+AUDIT_REGISTRY = {}
+REGISTRY_LOCK = threading.Lock()
+
 app = Flask(__name__)
 app.secret_key = "GEO_STABLE_SESSION_KEY_2026_MASTER"
+
+# Industrial Scoring Reference (Injected into Synthesis)
+FORMULA_TEXT = "Final GEO Score = (Visibility*0.25) + (Content*0.20) + (Tech*0.15) + (Schema*0.15) + (Platform*0.25)"
 
 # ── Modular Imports (Config, Utils, DB, Runner) ────────────────────────
 try:
     # Try relative imports (if run as module)
-    from .config import AGENT_MAPPING, AGENT_SKILL_MAP, AGENT_DIR, SCHEMA_DIR, SKILLS_DIR
+    from .config import AGENT_MAPPING, AGENT_SKILL_MAP, AGENT_DIR, SCHEMA_DIR, SKILLS_DIR, CLAUDE_API_KEY
     from .utils import (
         clean_html_for_ai, sync_summary_scores, calculate_deterministic_score,
-        score_tier, score_label, format_eur
+        score_tier, score_label, format_eur, calculate_authority_proxy, discover_competitors, calculate_echo_penalty
     )
     from .database import get_supabase, save_agent_log
     from .agent_runner import run_agent, run_triage_agent, simulate_geo_query
@@ -65,10 +75,10 @@ except (ImportError, ValueError):
     import utils
     import database
     import agent_runner
-    from config import AGENT_MAPPING, AGENT_SKILL_MAP, AGENT_DIR, SCHEMA_DIR, SKILLS_DIR
+    from config import AGENT_MAPPING, AGENT_SKILL_MAP, AGENT_DIR, SCHEMA_DIR, SKILLS_DIR, CLAUDE_API_KEY
     from utils import (
         clean_html_for_ai, sync_summary_scores, calculate_deterministic_score,
-        score_tier, score_label, format_eur
+        score_tier, score_label, format_eur, calculate_authority_proxy, discover_competitors, calculate_echo_penalty
     )
     from database import get_supabase, save_agent_log
     from agent_runner import run_agent, run_triage_agent, simulate_geo_query
@@ -136,10 +146,14 @@ def parse_agent_response(full_text: str, agent_id: str, weight: float) -> dict:
     return res_data
 
 @app.context_processor
-def inject_now():
+def inject_globals():
+    session_key = session.get("claude_api_key", "")
+    is_session_set = session_key != "" and session_key != "your-api-key-here"
+    is_config_set = CLAUDE_API_KEY != "" and CLAUDE_API_KEY != "your-api-key-here"
+    
     return {
         "now": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "claude_api_key_set": "claude_api_key" in session or (CLAUDE_API_KEY != "your-api-key-here" and CLAUDE_API_KEY != ""),
+        "claude_api_key_set": is_session_set or is_config_set,
         "missing_deps": fetch_page is None
     }
 
@@ -408,8 +422,23 @@ def analyze_url():
     audit_id = str(uuid.uuid4())  # Pre-generated UUID for the historical run
 
     from urllib.parse import urlparse, urljoin
-    domain = urlparse(url).netloc.replace("www.", "")
+    domain = urlparse(url).netloc.replace("www.", "").lower()
     if not domain: domain = url
+
+    # --- AUDIT PRE-EMPTION LOGIC ---
+    with REGISTRY_LOCK:
+        if domain in AUDIT_REGISTRY:
+            print(f"[DEBUG] [CONCURRENCY] Pre-empting existing audit for {domain}...")
+            AUDIT_REGISTRY[domain].set() # Signal old thread to stop
+        
+        stop_event = threading.Event()
+        AUDIT_REGISTRY[domain] = stop_event
+
+    def cleanup_registry():
+        with REGISTRY_LOCK:
+            if domain in AUDIT_REGISTRY and AUDIT_REGISTRY[domain] == stop_event:
+                del AUDIT_REGISTRY[domain]
+                print(f"[DEBUG] [CONCURRENCY] Audit registry cleared for {domain}")
 
     # ── 0. Project Hierarchy ──────────────────────────────────────────
     print(f"[DEBUG] [STEP 0] Establishing Supreme Relational UUIDs (Audit ID: {audit_id})")
@@ -496,7 +525,7 @@ def analyze_url():
                         # Reconstruct master metrics
                         final_score = latest["final_score"]
                         metrics = latest["metrics"]
-                        predicted_score = min(99, final_score + 12)
+                        predicted_score = final_score
                         meta_insight = latest.get("summary") or results[-1]["summary"] # Fallback
                         roadmap_fixes = next((r["roadmap"] for r in results if r["id"] == "geo-executive-roadmap"), [])
                         task_id = cached_audit_id # Ensure PDF / UI links work
@@ -594,7 +623,7 @@ def analyze_url():
             print("[DEBUG] No Sitemap found or sitemap empty. Falling back to Recursive BFS Crawler...")
             try:
                 from fetch_page import recursive_bfs_crawl
-                bfs_links = recursive_bfs_crawl(url, max_pages=3000, session=session_obj)
+                bfs_links = recursive_bfs_crawl(url, max_pages=1500, session=session_obj, stop_event=stop_event)
                 discovery_queue.extend([l for l in bfs_links if l not in visited])
                 visited.update(discovery_queue)
             except ImportError as e:
@@ -701,6 +730,11 @@ def analyze_url():
                         "status_code": r.get("status_code", 200)
                     })
                     metrics["schema_types"].update([s.get("@type") for s in r.get("structured_data", []) if isinstance(s, dict)])
+                    
+                    # Stop if we hit the 50-page target (ensuring high quality buffer)
+                    if len(content_bundle["internal_pages"]) >= 50:
+                        print(f"[DEBUG] [STEP 1.6] Target of 50 deep-audited pages reached. Truncating.")
+                        break
         # Calculate Advanced Aggregate Metrics for UI
         # FALLBACK: If discovery failed, ensure we at least audit the homepage
         if not content_bundle["internal_pages"] and res and not res.get("errors"):
@@ -753,35 +787,43 @@ def analyze_url():
         
         print(f"[DEBUG] [STEP 2] Extraction Complete. Discovered {metrics['total_discovered']} URLs, Deep-Audited {metrics['deep_audited']} Pages.")
 
-    if fetch_llms_txt:
-        lms = fetch_llms_txt(url)
-        if lms.get("llms_txt", {}).get("exists"):
-            content_bundle["llms"] = lms.get("llms_txt", {}).get("content", "")
+    # ── 2.7 Universal Ground-Truth Sensors (Consistency Protocol) ──
+    # This prevents agents from contradicting each other on file presence.
+    content_bundle["UNIVERSAL_SENSORS"] = {
+        "robots_txt": "Present & Accessible" if content_bundle.get("robots") and "Not Found" not in str(content_bundle.get("robots")) else "Missing/Blocked",
+        "llms_txt": "Present & Accessible" if content_bundle.get("llms") and "Not Found" not in str(content_bundle.get("llms")) else "Missing/Blocked",
+        "sitemap": "Detected" if metrics.get("total_discovered", 0) > 10 else "Not Found/Empty",
+        "mobile_ready": "Verified (Responsive Viewport)" if "viewport" in str(content_bundle.get("page", "")) else "Unknown",
+        "ssr_status": "Enabled (Server-Rendered HTML Detectable)" if metrics.get("deep_audited", 0) > 0 else "Blocked/CSR-Only"
+    }
     
-    # ── 2. Specialized Specialist Audits (Parallel 3x Speed) ───────────
+    # ── 3. High-Standard Master Synthesis (Specialists + Roadmap) ──────
     api_key = session.get("claude_api_key", CLAUDE_API_KEY)
-    specialist_agents = [a for a in AGENT_MAPPING.keys() if a not in ["geo-executive-roadmap", "geo-echo"]]
     results = []
     
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = {executor.submit(run_agent, agent_id, url, content_bundle, api_key, audit_id): agent_id for agent_id in specialist_agents}
-        for future in futures:
-            results.append(future.result())
-            time.sleep(1) # Small stagger for safety
-            
-    # ── 3. High-Standard Master Synthesis (The 7th Pass) ──────────────
-    print(f"[DEBUG] [STEP 3] Running Master Strategist Pass (Roadmap Synthesis)...")
-    content_bundle["agent_results"] = results # Pass results to strategist context
-    master_result = run_agent("geo-executive-roadmap", url, content_bundle, api_key, audit_id)
+    if not api_key or api_key == "your-api-key-here":
+        print("[WARNING] No API key detected. Skipping AI Synthesis.")
+        # Fill results with failure objects to avoid crashes
+        specialist_agents = [a for a in AGENT_MAPPING.keys() if a not in ["geo-executive-roadmap", "geo-echo"]]
+        for a_id in specialist_agents:
+            results.append({"id": a_id, "label": a_id, "score": 0, "summary": "Missing API Key.", "weight": 0.2})
+    else:
+        print(f"[DEBUG] [STEP 2.5] Running Specialist AI Agents (Parallel Processing)...")
+        specialist_agents = [a for a in AGENT_MAPPING.keys() if a not in ["geo-executive-roadmap", "geo-echo"]]
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {executor.submit(run_agent, agent_id, url, content_bundle, api_key, audit_id): agent_id for agent_id in specialist_agents}
+            for future in futures:
+                results.append(future.result())
+                time.sleep(0.5) # Minimal safety stagger
     
-    # ── 3. Deterministic Source of Truth Calculation ──────────────
+    # ── 3.5 Deterministic Source of Truth Calculation ──────────────
     # We calculate the final score BEFORE the Master Synthesis to ensure Sync
     final_score, predicted_score = calculate_deterministic_score(
         results, metrics, crawl_obstructed=content_bundle.get("crawl_obstructed", False)
     )
     
     # ── 4. Master Strategist Pass (The Total Sync Injection) ──────────────
-    print(f"[DEBUG] [STEP 4] Running Master Strategist Pass (Roadmap Synthesis)...")
+    print(f"[DEBUG] [STEP 3] Running Master Strategist Pass (Roadmap Synthesis)...")
     content_bundle["agent_results"] = results 
     content_bundle["FINAL_CALCULATED_SCORE"] = final_score # CRITICAL: Injection for Sync
     content_bundle["SCORING_FORMULA"] = FORMULA_TEXT

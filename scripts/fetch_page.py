@@ -17,7 +17,9 @@ Extracts HTML, text content, meta tags, headers, and structured data.
 
 import sys
 import json
+import os
 import re
+import time
 from urllib.parse import urljoin, urlparse
 
 try:
@@ -394,9 +396,10 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                         page.wait_for_timeout(1000)
 
                 # Human Interaction Simulation (Lazy-load triggers)
-                page.mouse.wheel(0, 800)
-                page.wait_for_timeout(1500)
-                page.mouse.wheel(0, -400) # Micro-jitter
+                page.mouse.wheel(0, 1200)
+                page.wait_for_timeout(2000)
+                page.mouse.wheel(0, -600) # Micro-jitter to trigger non-scroll listeners
+                page.wait_for_timeout(1000)
                 
                 # Capture and Parse
                 rendered_content = page.content()
@@ -426,6 +429,8 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                     r_word_count = len(rendered_text.split())
                     result["word_count"] = f"{ (r_word_count // 50) * 50 }+" if r_word_count > 50 else r_word_count
                     
+                    print(f"[DEBUG] [PIVOT SUCCESS] Captured {len(rendered_text)} chars and {len(result['internal_links'])} internal links from behind wall.")
+                    
                     result["title"] = rendered_soup.title.string if rendered_soup.title else result["title"]
                     
                     # RE-EXTRACT LINKS FROM RENDERED CONTENT
@@ -444,7 +449,7 @@ def fetch_page(url: str, timeout: int = 30, use_playwright: bool = False, sessio
                         href_host = parsed_href.netloc.replace("www.", "")
                         
                         # Fuzzy Match: Use is_internal to handle redirects/TLD jumps
-                        if is_internal(href, url, allowed_domains={final_host}):
+                        if is_internal(href, url, allowed_domains=allowed_domains):
                             result["internal_links"].append({"url": href, "text": link_text})
                         elif parsed_href.scheme in ("http", "https"):
                             result["external_links"].append({"url": href, "text": link_text})
@@ -737,7 +742,7 @@ def crawl_sitemap(url: str, max_pages: int = 5000, timeout: int = 20, session: a
     return list(discovered_pages)[:max_pages]
 
 
-def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwright: bool = False, session: any = None) -> list:
+def fast_extract_links(url: str, allowed_domains: set, timeout: int = 10, use_playwright: bool = False, session: any = None, user_agent: str = None) -> list:
     """Lightweight link extractor for rapid BFS crawling."""
     import time
     import random
@@ -770,7 +775,7 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
                     href = urljoin(url, link["href"])
                     href = href.split("#")[0].rstrip("/")
                     
-                    if is_internal(href, url, allowed_domains={base_domain}):
+                    if is_internal(href, url, allowed_domains=allowed_domains):
                         links.append(href)
                 
                 return list(set(links)), cookies
@@ -781,7 +786,7 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
     import requests
     target_session = session or requests.Session()
     headers = DEFAULT_HEADERS.copy()
-    headers["User-Agent"] = random.choice(USER_AGENTS)
+    headers["User-Agent"] = user_agent if user_agent else random.choice(USER_AGENTS)
     
     try:
         resp = target_session.get(url, headers=headers, timeout=timeout, allow_redirects=True)
@@ -791,14 +796,14 @@ def fast_extract_links(url: str, base_domain: str, timeout: int = 10, use_playwr
                 href = urljoin(url, link["href"])
                 href = href.split("#")[0].rstrip("/")
                 
-                if is_internal(href, url, allowed_domains={base_domain}):
+                if is_internal(href, url, allowed_domains=allowed_domains):
                     links.append(href)
     except Exception:
         pass
     return list(set(links)), None
 
 
-def recursive_bfs_crawl(url: str, max_pages: int = 3000, timeout: int = 15, session: any = None) -> list:
+def recursive_bfs_crawl(url: str, max_pages: int = 1500, timeout: int = 15, session: any = None, stop_event: any = None) -> list:
     """Strategic BFS discovery that avoids bot-walls and preserves speed."""
     import concurrent.futures
     from urllib.parse import urlparse, urljoin
@@ -848,27 +853,67 @@ def recursive_bfs_crawl(url: str, max_pages: int = 3000, timeout: int = 15, sess
         for cookie in res["cookies"]:
             actual_session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
 
+    ua_to_use = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        level = 1
         while queue and len(discovered) < max_pages:
-            batch = queue[:10]
-            queue = queue[10:]
+            if stop_event and stop_event.is_set():
+                print(f"[DEBUG] [BFS Crawler] Cancellation Signal Received. Stopping crawl.")
+                break
+                
+            batch_size = 10
+            batch = queue[:batch_size]
+            queue = queue[batch_size:]
             
-            future_to_url = {executor.submit(fast_extract_links, u, seed_host, timeout, session=actual_session): u for u in batch}
+            # Pass args explicitly to avoid routing session into use_playwright (boolean slot)
+            try:
+                future_to_url = {executor.submit(fast_extract_links, u, allowed_domains, timeout, False, actual_session, ua_to_use): u for u in batch}
+            except RuntimeError:
+                print(f"[DEBUG] [BFS Crawler] Executor shutdown detected. Returning discovered links.")
+                break
+            
+            new_additions = 0
             for future in concurrent.futures.as_completed(future_to_url):
+                u = future_to_url[future]
                 try:
                     new_links, _ = future.result()
                     for link in new_links:
+                        # CRITICAL: Strict duplicate prevention and limit enforcement
+                        if len(discovered) >= max_pages: break
                         if link not in visited:
-                            # Use is_internal to support fuzzy domain matching
                             if is_internal(link, url, allowed_domains=allowed_domains):
                                 visited.add(link)
                                 discovered.append(link)
                                 queue.append(link)
-                            if len(discovered) >= max_pages: break
-                except Exception: pass
+                                new_additions += 1
+                except Exception as e:
+                    print(f"[DEBUG] [BFS Crawler] Error on {u}: {e}")
+                
                 if len(discovered) >= max_pages: break
+            
+            if new_additions > 0:
+                print(f"[DEBUG] [BFS Crawler] Batch processed. Discovered {new_additions} NEW links. (Total: {len(discovered)})")
+            elif not queue:
+                print(f"[DEBUG] [BFS Crawler] SITE EXHAUSTED: No more internal links found after scanning {len(discovered)} pages.")
+                break
+
+            if len(discovered) >= max_pages: break
 
     print(f"[DEBUG] [BFS Crawler] Finished. Discovered {len(discovered)} unique URLs.")
+    
+    # --- LOG DISCOVERED URLS TO FILE (Rewrite Every Audit) ---
+    try:
+        if not os.path.exists("scratch"): os.makedirs("scratch")
+        with open("scratch/discovered_urls.txt", "w") as f:
+            f.write(f"--- DISCOVERED URLS ---\n")
+            f.write(f"Total: {len(discovered)}\n\n")
+            for d in discovered:
+                f.write(f"{d}\n")
+        print(f"[DEBUG] [BFS Crawler] URL Discovery log updated: scratch/discovered_urls.txt")
+    except Exception as le:
+        print(f"[DEBUG] [BFS Crawler] Failed to write URL log: {le}")
+
     return discovered[:max_pages]
 
 

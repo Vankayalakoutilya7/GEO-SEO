@@ -16,7 +16,7 @@ Ignore common keyword limitations. Look for **semantic intent**.
 For example, "Our Plans" or "Join the Community" are high-priority pages even if they don't contain the word "pricing."
 
 ### Output Format:
-Return a JSON object containing an array of objects with the **Index** (from the provided list) and your **Priority Score** (0-100). Only return the **Top 50** selections.
+Return a JSON object containing an array of objects with the **Index** (from the provided list) and your **Priority Score** (0-100). Only return the **Top 70** selections.
 
 ```json
 {
@@ -29,5 +29,5 @@ Return a JSON object containing an array of objects with the **Index** (from the
 ```
 
 ### Constraints:
-- Select exactly **50 indices** (or fewer if the total list is smaller).
+- Select exactly **70 indices** (or fewer if the total list is smaller).
 - Prioritize diversity: ensure we audit a mix of products, authors, and conversion pages.

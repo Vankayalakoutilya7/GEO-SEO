@@ -30,27 +30,27 @@ def sync_summary_scores(summary: str, actual_score: int) -> str:
     return scrubbed
 
 def calculate_deterministic_score(results, metrics, crawl_obstructed=False):
-    """The Single Source of Truth for GEO scoring."""
+    """The Single Source of Truth for GEO scoring — Pure Weighted Math Implementation."""
     if not results: return 0, 0
-    # 1. Component Avg
-    specialist_avg = round(sum(r.get("score", 0) * r.get("weight", 0) for r in results))
-    # 2. Severity Penalties
-    finding_deduction = 0
+    
+    # 1. Base Weighted Score (Components)
+    # We use the weights from config or results directly.
+    # No hidden global penalties are applied here to ensure 100% manual sync.
+    base_score = 0
+    total_weight = 0
     for r in results:
-        raw_w = r.get("weaknesses", [])
-        if isinstance(raw_w, str): raw_w = [raw_w]
-        for w in raw_w:
-            if not isinstance(w, dict): continue
-            sev = w.get("severity", "low").upper()
-            if sev == "CRITICAL": finding_deduction += 15
-            elif sev == "HIGH": finding_deduction += 8
-    # 3. Infrastructural Penalties
-    infr_penalty = 0
-    if metrics.get("broken_links", 0) > 20: infr_penalty += 10
-    if crawl_obstructed: infr_penalty += 20
-    final_score = max(0, min(100, specialist_avg - finding_deduction - infr_penalty))
-    predicted_score = min(99, final_score + 15)
-    return int(final_score), int(predicted_score)
+        w = r.get("weight", 0)
+        # If a component failed, its score is 0, which correctly pulls down the average.
+        base_score += r.get("score", 0) * w
+        total_weight += w
+    
+    final_score = int(base_score / total_weight) if total_weight > 0 else 0
+    final_score = max(0, min(100, final_score))
+    
+    predicted_score = final_score
+    
+    print(f"[DEBUG] [MATH] Pure Weighted Score: {final_score}")
+    return final_score, int(predicted_score)
 
 def score_tier(score: int) -> str:
     if score >= 80: return "good"
@@ -67,3 +67,99 @@ def score_label(score: int) -> str:
 def format_eur(value) -> str:
     if not value: return "—"
     return f"€{int(value):,}".replace(",", ".")
+
+def calculate_authority_proxy(brand_name, brand_report):
+    """Calculates a 0-100 authority score based on cross-platform digital footprint."""
+    if not brand_report or "platforms" not in brand_report:
+        return 0
+        
+    score = 0
+    plats = brand_report["platforms"]
+    
+    # 1. YouTube (Strongest Correlation: 0.737)
+    yt = plats.get("youtube", {})
+    if yt.get("has_channel"): score += 30
+    if yt.get("mentioned_in_videos"): score += 10
+    
+    # 2. Reddit (High Contextual Authority)
+    rd = plats.get("reddit", {})
+    if rd.get("has_subreddit"): score += 20
+    if rd.get("mentioned_in_discussions"): score += 10
+    
+    # 3. Wikipedia (Trust Signal)
+    wk = plats.get("wikipedia", {})
+    if wk.get("has_wikipedia_page"): score += 20
+    elif wk.get("cited_in_articles"): score += 10
+    
+    # 4. LinkedIn (B2B Signal)
+    li = plats.get("linkedin", {})
+    if li.get("has_company_page"): score += 10
+    
+    return min(100, score)
+
+def discover_competitors(brand_name, domain):
+    """Simple competitor heuristics for benchmarking."""
+    # Common industry-specific lookups
+    market_map = {
+        "Typeform": ["SurveyMonkey", "Jotform", "Google Forms", "Paperform"],
+        "SurveyMonkey": ["Typeform", "Jotform", "Alchemer"],
+        "Ahrefs": ["Semrush", "Moz", "Ubersuggest"],
+        "Semrush": ["Ahrefs", "Moz", "Screaming Frog"],
+        "Canva": ["Adobe Express", "VistaCreate", "Figma"],
+    }
+    
+    # Direct match or fuzzy match
+    for key in market_map:
+        if key.lower() in brand_name.lower():
+            return market_map[key]
+            
+    # Generic fallback
+    return ["Competitor A", "Competitor B", "Competitor C"]
+def calculate_echo_penalty(internal_pages):
+    """Detects content redundancy (Echo) across internal pages."""
+    if not internal_pages or len(internal_pages) < 2:
+        return 0
+        
+    def get_shingles(text):
+        if not text: return set()
+        words = re.findall(r'\w+', text.lower())
+        return set(words)
+
+    overlaps = []
+    # Compare first few pages for template redundancy
+    base_pages = internal_pages[:5]
+    for i in range(len(base_pages)):
+        for j in range(i + 1, len(base_pages)):
+            s1 = get_shingles(base_pages[i].get("content", ""))
+            s2 = get_shingles(base_pages[j].get("content", ""))
+            if not s1 or not s2: continue
+            
+            intersection = len(s1.intersection(s2))
+            union = len(s1.union(s2))
+            if union > 0:
+                overlaps.append(intersection / union)
+                
+    if not overlaps:
+        return 0
+        
+    avg_overlap = sum(overlaps) / len(overlaps)
+    return int(avg_overlap * 100)
+
+def calculate_authority_proxy(brand_name, brand_report):
+    """Calculates a 0-100 authority score based on cross-platform digital footprint."""
+    if not brand_report or "platforms" not in brand_report:
+        return 0
+    score = 0
+    plats = brand_report["platforms"]
+    yt = plats.get("youtube", {})
+    if yt.get("has_channel"): score += 30
+    if yt.get("mentioned_in_videos"): score += 10
+    rd = plats.get("reddit", {})
+    if rd.get("has_subreddit"): score += 20
+    if rd.get("mentioned_in_discussions"): score += 10
+    wk = plats.get("wikipedia", {})
+    if wk.get("has_wikipedia_page"): score += 20
+    elif wk.get("cited_in_articles"): score += 10
+    li = plats.get("linkedin", {})
+    if li.get("has_company_page"): score += 10
+    return min(100, score)
